@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -53,6 +54,30 @@ func init() {
 			return runSetupClaudeCode()
 		},
 	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "vscode",
+		Short: "Configure Phloem for VS Code (GitHub Copilot)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupVSCode()
+		},
+	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "zed",
+		Short: "Configure Phloem for Zed",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupZed()
+		},
+	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "cline",
+		Short: "Configure Phloem for Cline (VS Code extension)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupCline()
+		},
+	})
 }
 
 // runSetup auto-detects and configures IDEs
@@ -92,6 +117,44 @@ func runSetup() error {
 			fmt.Printf("   ❌ Claude Code setup failed: %v\n", err)
 		} else {
 			detected++
+		}
+	}
+
+	// Check for VS Code
+	vscodeMCPPath := vscodeMCPConfigPath()
+	if vscodeMCPPath != "" {
+		// Check if VS Code is installed by looking for its config parent dir
+		if _, err := os.Stat(filepath.Dir(vscodeMCPPath)); err == nil {
+			fmt.Println("👉 Detected VS Code")
+			if err := runSetupVSCode(); err != nil {
+				fmt.Printf("   ❌ VS Code setup failed: %v\n", err)
+			} else {
+				detected++
+			}
+		}
+	}
+
+	// Check for Zed
+	zedSettingsPath := zedSettingsFilePath()
+	if _, err := os.Stat(filepath.Dir(zedSettingsPath)); err == nil {
+		fmt.Println("👉 Detected Zed")
+		if err := runSetupZed(); err != nil {
+			fmt.Printf("   ❌ Zed setup failed: %v\n", err)
+		} else {
+			detected++
+		}
+	}
+
+	// Check for Cline
+	clinePath := clineMCPConfigPath()
+	if clinePath != "" {
+		if _, err := os.Stat(filepath.Dir(clinePath)); err == nil {
+			fmt.Println("👉 Detected Cline")
+			if err := runSetupCline(); err != nil {
+				fmt.Printf("   ❌ Cline setup failed: %v\n", err)
+			} else {
+				detected++
+			}
 		}
 	}
 
@@ -371,5 +434,250 @@ func runSetupWindsurf() error {
 	fmt.Println("  Ask your AI assistant: \"please run phloem setup windsurf in a terminal\"")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
+	return nil
+}
+
+// vscodeMCPConfigPath returns the user-level VS Code MCP config path
+func vscodeMCPConfigPath() string {
+	switch runtime.GOOS {
+	case "darwin":
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, "Library", "Application Support", "Code", "User", "mcp.json")
+	case "linux":
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".config", "Code", "User", "mcp.json")
+	case "windows":
+		appdata := os.Getenv("APPDATA")
+		if appdata == "" {
+			return ""
+		}
+		return filepath.Join(appdata, "Code", "User", "mcp.json")
+	}
+	return ""
+}
+
+// runSetupVSCode configures VS Code (GitHub Copilot) MCP settings
+func runSetupVSCode() error {
+	fmt.Println("🔧 Setting up Phloem for VS Code...")
+	fmt.Println()
+
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	configPath := vscodeMCPConfigPath()
+	if configPath == "" {
+		return fmt.Errorf("could not determine VS Code config path for this platform")
+	}
+
+	// Create parent directory if needed
+	configDir := filepath.Dir(configPath)
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return fmt.Errorf("failed to create config directory: %w", err)
+		}
+	}
+
+	// Read or create config
+	var config map[string]interface{}
+	if data, err := os.ReadFile(configPath); err == nil {
+		if err := json.Unmarshal(data, &config); err != nil {
+			return fmt.Errorf("failed to parse existing mcp.json: %w", err)
+		}
+		fmt.Println("✓ Found existing mcp.json")
+	} else {
+		config = make(map[string]interface{})
+		fmt.Println("✓ Creating new mcp.json")
+	}
+
+	// VS Code uses "servers" key (not "mcpServers")
+	if config["servers"] == nil {
+		config["servers"] = make(map[string]interface{})
+	}
+	servers := config["servers"].(map[string]interface{})
+	servers["phloem"] = map[string]interface{}{
+		"type":    "stdio",
+		"command": phloemPath,
+		"args":    []string{"serve"},
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write mcp.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated: %s\n", configPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for VS Code!")
+	fmt.Println()
+	fmt.Println("Requires VS Code 1.99+ with GitHub Copilot (Agent Mode).")
+	fmt.Println("No restart needed — VS Code detects config changes automatically.")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	return nil
+}
+
+// zedSettingsFilePath returns the Zed settings.json path
+func zedSettingsFilePath() string {
+	home, _ := os.UserHomeDir()
+	switch runtime.GOOS {
+	case "darwin":
+		return filepath.Join(home, ".zed", "settings.json")
+	case "linux":
+		if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
+			return filepath.Join(xdg, "zed", "settings.json")
+		}
+		return filepath.Join(home, ".config", "zed", "settings.json")
+	}
+	return filepath.Join(home, ".zed", "settings.json")
+}
+
+// runSetupZed configures Zed MCP settings
+func runSetupZed() error {
+	fmt.Println("🔧 Setting up Phloem for Zed...")
+	fmt.Println()
+
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	settingsPath := zedSettingsFilePath()
+	settingsDir := filepath.Dir(settingsPath)
+
+	if _, err := os.Stat(settingsDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(settingsDir, 0755); err != nil {
+			return fmt.Errorf("failed to create Zed config directory: %w", err)
+		}
+	}
+
+	// Read or create settings
+	var settings map[string]interface{}
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		if err := json.Unmarshal(data, &settings); err != nil {
+			return fmt.Errorf("failed to parse existing settings.json: %w", err)
+		}
+		fmt.Println("✓ Found existing settings.json")
+	} else {
+		settings = make(map[string]interface{})
+		fmt.Println("✓ Creating new settings.json")
+	}
+
+	// Zed uses "context_servers" key
+	if settings["context_servers"] == nil {
+		settings["context_servers"] = make(map[string]interface{})
+	}
+	servers := settings["context_servers"].(map[string]interface{})
+	servers["phloem"] = map[string]interface{}{
+		"command": phloemPath,
+		"args":    []string{"serve"},
+	}
+
+	data, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal settings: %w", err)
+	}
+	if err := os.WriteFile(settingsPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write settings.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated: %s\n", settingsPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Zed!")
+	fmt.Println()
+	fmt.Println("No restart needed — Zed hot-reloads settings.")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	return nil
+}
+
+// clineMCPConfigPath returns the Cline MCP settings path
+func clineMCPConfigPath() string {
+	switch runtime.GOOS {
+	case "darwin":
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, "Library", "Application Support", "Code", "User",
+			"globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json")
+	case "linux":
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".config", "Code", "User",
+			"globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json")
+	case "windows":
+		appdata := os.Getenv("APPDATA")
+		if appdata == "" {
+			return ""
+		}
+		return filepath.Join(appdata, "Code", "User",
+			"globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json")
+	}
+	return ""
+}
+
+// runSetupCline configures Cline (VS Code extension) MCP settings
+func runSetupCline() error {
+	fmt.Println("🔧 Setting up Phloem for Cline...")
+	fmt.Println()
+
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	configPath := clineMCPConfigPath()
+	if configPath == "" {
+		return fmt.Errorf("could not determine Cline config path for this platform")
+	}
+
+	// Create parent directory if needed
+	configDir := filepath.Dir(configPath)
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return fmt.Errorf("failed to create Cline config directory: %w", err)
+		}
+	}
+
+	var config map[string]interface{}
+	if data, err := os.ReadFile(configPath); err == nil {
+		if err := json.Unmarshal(data, &config); err != nil {
+			return fmt.Errorf("failed to parse existing cline_mcp_settings.json: %w", err)
+		}
+		fmt.Println("✓ Found existing cline_mcp_settings.json")
+	} else {
+		config = make(map[string]interface{})
+		fmt.Println("✓ Creating new cline_mcp_settings.json")
+	}
+
+	if config["mcpServers"] == nil {
+		config["mcpServers"] = make(map[string]interface{})
+	}
+	mcpServers := config["mcpServers"].(map[string]interface{})
+	mcpServers["phloem"] = map[string]interface{}{
+		"command":  phloemPath,
+		"args":     []string{"serve"},
+		"disabled": false,
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write cline_mcp_settings.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated: %s\n", configPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Cline!")
+	fmt.Println()
+	fmt.Println("No restart needed — Cline detects config changes automatically.")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	return nil
 }
