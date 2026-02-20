@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.24'
 
       - name: Run unit tests
         run: |
@@ -55,8 +55,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        go-version: ['1.21', '1.22']
+        os: [ubuntu-latest, macos-latest, macos-14]
+        go-version: ['1.24']
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +70,7 @@ jobs:
 
       - name: Verify MCP server starts
         run: |
-          go build -o phloem-test ./...
+          go build -o phloem-test .
           # MCP server expects stdin, just verify it compiles and has help
           ./phloem-test --help || true
 
@@ -86,7 +86,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.24'
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
@@ -106,7 +106,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.24'
 
       - name: Build Phloem
         run: go build -o phloem ./...
@@ -118,14 +118,45 @@ jobs:
       - name: Test tools/list
         run: |
           echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
-          {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | tail -1 | jq -e '.result.tools | length == 5'
+          {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | tail -1 | jq -e '.result.tools | length == 14'
+
+  # ==========================================================================
+  # Privacy Verification
+  # ==========================================================================
+  privacy:
+    name: Privacy Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Build
+        run: go build -o phloem .
+      - name: Verify no network connections
+        run: |
+          export PHLOEM_DATA_DIR=$(mktemp -d)
+          # Start phloem serve, send initialize + remember, check for network
+          echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
+          {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"remember","arguments":{"content":"CI privacy test"}}}' | timeout 10 ./phloem serve 2>/dev/null &
+          PID=$!
+          sleep 2
+          # Check for any network connections from phloem
+          if ss -tnp 2>/dev/null | grep -q "pid=$PID"; then
+            echo "FAIL: phloem has network connections"
+            kill $PID 2>/dev/null || true
+            exit 1
+          fi
+          echo "PASS: No network connections detected"
+          kill $PID 2>/dev/null || true
 
   # ==========================================================================
   # Quality Gate Summary
   # ==========================================================================
   quality-gate:
     name: Quality Gate
-    needs: [unit-tests, build, lint, mcp-protocol]
+    needs: [unit-tests, build, lint, mcp-protocol, privacy]
     runs-on: ubuntu-latest
     steps:
       - name: All checks passed
@@ -137,3 +168,4 @@ jobs:
           echo "  - Build: ✅"
           echo "  - Lint: ✅"
           echo "  - MCP Protocol: ✅"
+          echo "  - Privacy: ✅"

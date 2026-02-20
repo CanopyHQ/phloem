@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phloem - Your AI Finally Remembers</title>
-    <meta name="description" content="Escape the AI data silos. Phloem captures your conversations from ChatGPT, Claude, and Gemini - stored locally, owned by you.">
-    
+    <title>Phloem - Local-first AI Memory with Causal Graphs</title>
+    <meta name="description" content="Persistent memory for AI coding tools. Your conversations and context survive across sessions. Fully offline. Zero config. Your data never leaves your machine.">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
+            --bg-secondary: #111111;
             --bg-card: #1a1a1a;
             --text-primary: #f0f0f0;
             --text-secondary: #888;
@@ -22,21 +22,26 @@
             --accent-dim: #00a885;
             --border: #2a2a2a;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
         }
-        
-        /* Hero */
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ── Hero ── */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -45,193 +50,222 @@
             align-items: center;
             text-align: center;
             padding: 2rem;
-            background: 
-                radial-gradient(ellipse at 50% 0%, rgba(0, 212, 170, 0.15) 0%, transparent 50%),
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(0, 212, 170, 0.12) 0%, transparent 50%),
                 var(--bg-primary);
         }
-        
-        .logo {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
+
         h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-size: clamp(3rem, 7vw, 5rem);
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 0.25rem;
             background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
-        .tagline {
-            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            max-width: 600px;
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: var(--accent);
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
         }
-        
+
+        .description {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
         .cta-group {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
             justify-content: center;
-            margin-bottom: 3rem;
+            align-items: center;
         }
-        
+
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 1rem 2rem;
+            padding: 0.9rem 1.8rem;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: 500;
             text-decoration: none;
             transition: all 0.2s ease;
+            font-family: inherit;
         }
-        
+
         .btn-primary {
             background: var(--accent);
             color: var(--bg-primary);
         }
-        
+
         .btn-primary:hover {
             background: var(--accent-dim);
             transform: translateY(-2px);
         }
-        
+
         .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text-primary);
+            background: transparent;
+            color: var(--text-secondary);
             border: 1px solid var(--border);
         }
-        
+
         .btn-secondary:hover {
+            color: var(--text-primary);
             border-color: var(--accent);
         }
-        
-        .hero-note {
+
+        .install-cmd {
+            display: block;
+            margin-top: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
             color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            user-select: all;
         }
-        
-        /* Features */
-        .features {
-            padding: 6rem 2rem;
-            background: var(--bg-secondary);
+
+        .install-cmd .prompt {
+            color: var(--accent);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
+
+        /* ── Section shared ── */
         .section-title {
             text-align: center;
             font-size: 2rem;
-            margin-bottom: 3rem;
+            margin-bottom: 1rem;
         }
-        
-        .feature-grid {
+
+        .section-lead {
+            text-align: center;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 3rem;
+        }
+
+        section {
+            padding: 6rem 2rem;
+        }
+
+        section.alt {
+            background: var(--bg-secondary);
+        }
+
+        /* ── How It Works (3 cards) ── */
+        .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
         }
-        
-        .feature-card {
+
+        .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 2rem;
             transition: border-color 0.2s ease;
         }
-        
-        .feature-card:hover {
+
+        .card:hover {
             border-color: var(--accent);
         }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .feature-card p {
-            color: var(--text-secondary);
-        }
-        
-        /* How It Works */
-        .how-it-works {
-            padding: 6rem 2rem;
-        }
-        
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-        
-        .step {
-            text-align: center;
-        }
-        
-        .step-number {
+
+        .card-icon {
             width: 48px;
             height: 48px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border-radius: 50%;
+            border-radius: 10px;
+            background: rgba(0, 212, 170, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 1.25rem;
-            margin: 0 auto 1rem;
+            margin-bottom: 1.25rem;
         }
-        
-        .step h3 {
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .card h3 {
+            font-size: 1.15rem;
             margin-bottom: 0.5rem;
         }
-        
-        .step p {
+
+        .card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ── Privacy ── */
+        .privacy-list {
+            max-width: 600px;
+            margin: 0 auto;
+            list-style: none;
+        }
+
+        .privacy-list li {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
             color: var(--text-secondary);
         }
-        
-        /* Privacy */
-        .privacy {
-            padding: 6rem 2rem;
-            background: var(--bg-secondary);
+
+        .privacy-list li:last-child {
+            border-bottom: none;
         }
-        
-        .privacy-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
+
+        .privacy-list .check {
+            color: var(--accent);
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .privacy-audit {
+            text-align: center;
             margin-top: 2rem;
         }
-        
-        .privacy-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+
+        .privacy-audit code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            font-size: 0.9rem;
+            color: var(--accent);
         }
-        
-        .privacy-icon {
-            font-size: 1.5rem;
+
+        .privacy-audit a {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
         }
-        
-        /* Code Block */
-        .code-section {
-            padding: 6rem 2rem;
+
+        .privacy-audit a:hover {
+            text-decoration: underline;
         }
-        
+
+        /* ── Quick Start ── */
         .code-block {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -240,25 +274,78 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
             overflow-x: auto;
-            max-width: 700px;
-            margin: 2rem auto 0;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 2;
         }
-        
+
         .code-block .comment {
             color: var(--text-secondary);
         }
-        
+
         .code-block .command {
             color: var(--accent);
         }
-        
-        /* Footer */
+
+        /* ── IDE Support ── */
+        .ide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            max-width: 840px;
+            margin: 0 auto;
+        }
+
+        .ide-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .ide-card:hover {
+            border-color: var(--accent);
+        }
+
+        .ide-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .ide-cmd {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+            background: rgba(0, 212, 170, 0.08);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .ide-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ide-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* ── Footer ── */
         footer {
             padding: 3rem 2rem;
             border-top: 1px solid var(--border);
             text-align: center;
         }
-        
+
         .footer-links {
             display: flex;
             gap: 2rem;
@@ -266,355 +353,167 @@
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
         }
-        
+
         .footer-links a {
             color: var(--text-secondary);
             text-decoration: none;
+            font-size: 0.95rem;
             transition: color 0.2s ease;
         }
-        
+
         .footer-links a:hover {
             color: var(--accent);
         }
-        
+
         .copyright {
             color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        /* Pricing */
-        .pricing {
-            padding: 6rem 2rem;
-        }
-        
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 700px;
-            margin: 2rem auto 0;
-        }
-        
-        .pricing-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-        }
-        
-        .pricing-card.featured {
-            border-color: var(--accent);
-            transform: scale(1.05);
-        }
-        
-        .pricing-card .badge {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--accent);
-            color: var(--bg-primary);
-            padding: 0.25rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .pricing-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .pricing-card .price {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }
-        
-        .pricing-card .price span {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--text-secondary);
-        }
-        
-        .pricing-features {
-            list-style: none;
-            text-align: left;
-            margin-bottom: 2rem;
-        }
-        
-        .pricing-features li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .pricing-features li:last-child {
-            border-bottom: none;
-        }
-        
-        .pricing-note {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-top: 2rem;
-            font-style: italic;
-        }
-        
-        /* Transparency */
-        .transparency {
-            padding: 6rem 2rem;
-            background: var(--bg-secondary);
-        }
-        
-        .section-subtitle {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-top: -2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .transparency-note {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-top: 2rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        /* Responsive */
+        /* ── Responsive ── */
         @media (max-width: 768px) {
             .hero {
                 padding: 4rem 1.5rem;
             }
-            
+
             .cta-group {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .btn {
                 width: 100%;
                 max-width: 300px;
                 justify-content: center;
             }
-            
-            .pricing-card.featured {
-                transform: none;
+
+            section {
+                padding: 4rem 1.5rem;
             }
         }
     </style>
 </head>
 <body>
+
     <!-- Hero -->
     <section class="hero">
-        <div class="logo">🧠</div>
-        <h1>Your AI Finally Remembers</h1>
-        <p class="tagline">
-            Escape the AI data silos. Capture your conversations from ChatGPT, Claude, and Gemini — stored locally, owned by you.
+        <h1>Phloem</h1>
+        <p class="subtitle">Local-first AI memory with causal graphs</p>
+        <p class="description">
+            Persistent memory for AI coding tools. Your conversations and context survive across sessions. Fully offline. Zero config. Your data never leaves your machine.
         </p>
         <div class="cta-group">
-            <a href="#download" class="btn btn-primary">
-                <span>⬇️</span> Download for Mac
-            </a>
-            <a href="https://github.com/CanopyHQ/phloem" class="btn btn-secondary">
-                <span>📦</span> View on GitHub
-            </a>
+            <a href="#quickstart" class="btn btn-primary">Install with Homebrew</a>
+            <a href="https://github.com/CanopyHQ/phloem" class="btn btn-secondary">View on GitHub</a>
         </div>
-        <p class="hero-note">Free. No account required. No tracking.</p>
+        <div class="install-cmd"><span class="prompt">$</span> brew install phloemhq/tap/phloem</div>
     </section>
-    
-    <!-- Features -->
-    <section class="features">
-        <div class="container">
-            <h2 class="section-title">Why Phloem?</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Privacy First</h3>
-                    <p>All data stays on your device. No cloud required. No account needed. No tracking, ever.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <h3>Cross-Platform AI</h3>
-                    <p>Capture conversations from ChatGPT, Claude, and Gemini. One memory layer across all your AI tools.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3>Instant Search</h3>
-                    <p>Find any conversation instantly with powerful semantic search. Press ⌘⇧P anywhere.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📤</div>
-                    <h3>Your Data, Portable</h3>
-                    <p>Export everything to JSON or Markdown anytime. No vendor lock-in. Take your memories anywhere.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Lightweight</h3>
-                    <p>Menu bar app that stays out of your way. Uses minimal resources. Works offline.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛠️</div>
-                    <h3>Open Source</h3>
-                    <p>Audit the code yourself. Contribute improvements. Built by developers, for developers.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
+
     <!-- How It Works -->
-    <section class="how-it-works">
+    <section class="alt">
         <div class="container">
             <h2 class="section-title">How It Works</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3>Install Phloem</h3>
-                    <p>Download the Mac app or install via Homebrew</p>
+            <p class="section-lead">More than vector search. Phloem understands how your memories relate to each other and to your code.</p>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="6.7" y1="7.5" x2="10.8" y2="16.2"/><line x1="17.3" y1="7.5" x2="13.2" y2="16.2"/></svg>
+                    </div>
+                    <h3>Causal Memory Graphs</h3>
+                    <p>Not just vector search. Phloem builds a directed acyclic graph linking memories by cause and effect.</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h3>Add the Extension</h3>
-                    <p>Install the browser extension for Chrome</p>
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                    <h3>Citation Verification</h3>
+                    <p>Memories linked to specific code locations. Confidence scores decay when code changes.</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h3>Use AI Normally</h3>
-                    <p>Chat with ChatGPT, Claude, or Gemini as usual</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <h3>Search Anytime</h3>
-                    <p>Press ⌘⇧P to find any past conversation</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Privacy -->
-    <section class="privacy">
-        <div class="container">
-            <h2 class="section-title">Privacy Commitment</h2>
-            <div class="privacy-grid">
-                <div class="privacy-item">
-                    <span class="privacy-icon">✅</span>
-                    <span>All data stored locally</span>
-                </div>
-                <div class="privacy-item">
-                    <span class="privacy-icon">✅</span>
-                    <span>No account required</span>
-                </div>
-                <div class="privacy-item">
-                    <span class="privacy-icon">✅</span>
-                    <span>No telemetry or analytics</span>
-                </div>
-                <div class="privacy-item">
-                    <span class="privacy-icon">✅</span>
-                    <span>Export anytime</span>
-                </div>
-                <div class="privacy-item">
-                    <span class="privacy-icon">❌</span>
-                    <span>No data sent to servers</span>
-                </div>
-                <div class="privacy-item">
-                    <span class="privacy-icon">❌</span>
-                    <span>No ads, ever</span>
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <h3>Works With Your IDE</h3>
+                    <p>MCP protocol support for Claude Code, Cursor, and Windsurf. One command setup.</p>
                 </div>
             </div>
-        </div>
-    </section>
-    
-    <!-- Pricing -->
-    <section class="pricing" id="pricing">
-        <div class="container">
-            <h2 class="section-title">Simple Pricing</h2>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Free</h3>
-                    <div class="price">$0<span>/forever</span></div>
-                    <ul class="pricing-features">
-                        <li>✅ 14-day memory window</li>
-                        <li>✅ 1,000 memories</li>
-                        <li>✅ Semantic search</li>
-                        <li>✅ All AI platforms</li>
-                        <li>✅ Local storage</li>
-                        <li>❌ Cloud sync</li>
-                    </ul>
-                    <a href="#download" class="btn btn-secondary">Get Started Free</a>
-                </div>
-                <div class="pricing-card featured">
-                    <div class="badge">Most Popular</div>
-                    <h3>Pro</h3>
-                    <div class="price">$9<span>/month</span></div>
-                    <ul class="pricing-features">
-                        <li>✅ <strong>Unlimited</strong> memory window</li>
-                        <li>✅ <strong>Unlimited</strong> memories</li>
-                        <li>✅ Semantic search</li>
-                        <li>✅ All AI platforms</li>
-                        <li>✅ Local storage</li>
-                        <li>✅ Cloud sync & backup</li>
-                        <li>✅ Priority support</li>
-                    </ul>
-                    <a href="https://buy.stripe.com/REPLACE_WITH_STRIPE_LINK" class="btn btn-primary">Upgrade to Pro</a>
-                </div>
-            </div>
-            <p class="pricing-note">Your older memories are waiting. Upgrade anytime to unlock them.</p>
-        </div>
-    </section>
-    
-    <!-- Transparency -->
-    <section class="transparency">
-        <div class="container">
-            <h2 class="section-title">Radical Transparency</h2>
-            <p class="section-subtitle">See exactly what telemetry we collect. No secrets.</p>
-            <div class="code-block">
-                <div class="comment"># See what Phloem sends (spoiler: just operational metrics)</div>
-                <div class="command">phloem telemetry show</div>
-                <br>
-                <div class="comment"># Export for your security team to audit</div>
-                <div class="command">phloem telemetry export > audit.json</div>
-                <br>
-                <div class="comment"># Don't trust us? Disable it entirely</div>
-                <div class="command">phloem telemetry disable</div>
-            </div>
-            <p class="transparency-note">We send: event types, timestamps, counts, hashes.<br>We NEVER send: content, PII, secrets, queries.</p>
         </div>
     </section>
 
-    <!-- Download -->
-    <section class="code-section" id="download">
+    <!-- Privacy -->
+    <section>
         <div class="container">
-            <h2 class="section-title">Get Started</h2>
-            <div class="code-block">
-                <div class="comment"># Install via Homebrew</div>
-                <div class="command">brew install canopyhq/tap/phloem</div>
-                <br>
-                <div class="comment"># Or download directly</div>
-                <div class="command">curl -sSL https://phloem.canopyhq.io/install.sh | bash</div>
-                <br>
-                <div class="comment"># Install browser extension</div>
-                <div class="command">phloem install-extension</div>
-            </div>
-            <div class="cta-group" style="margin-top: 2rem;">
-                <a href="https://chrome.google.com/webstore/detail/phloem" class="btn btn-primary">
-                    <span>🌐</span> Chrome Extension
-                </a>
-                <a href="https://github.com/CanopyHQ/phloem/releases" class="btn btn-secondary">
-                    <span>📦</span> All Downloads
-                </a>
+            <h2 class="section-title">Your Data Stays on Your Machine</h2>
+            <p class="section-lead">No network calls. No accounts. No telemetry. Everything lives in a local SQLite database.</p>
+            <ul class="privacy-list">
+                <li><span class="check">+</span> All memories stored locally in <code>~/.phloem/memories.db</code></li>
+                <li><span class="check">+</span> Zero network calls -- works fully offline</li>
+                <li><span class="check">+</span> No account required, no sign-up</li>
+                <li><span class="check">+</span> No telemetry, no analytics, no tracking</li>
+                <li><span class="check">+</span> Open source -- audit the code yourself</li>
+            </ul>
+            <div class="privacy-audit">
+                <div>Verify anytime: <code>phloem audit</code></div>
+                <a href="https://github.com/CanopyHQ/phloem/blob/main/docs/PRIVACY.md">Read the full privacy policy</a>
             </div>
         </div>
     </section>
-    
+
+    <!-- Quick Start -->
+    <section class="alt" id="quickstart">
+        <div class="container">
+            <h2 class="section-title">Quick Start</h2>
+            <p class="section-lead">Two commands. Under a minute.</p>
+            <div class="code-block">
+                <div class="comment"># Install via Homebrew</div>
+                <div class="command">brew install phloemhq/tap/phloem</div>
+                <br>
+                <div class="comment"># Set up Phloem</div>
+                <div class="command">phloem setup</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- IDE Support -->
+    <section>
+        <div class="container">
+            <h2 class="section-title">IDE Support</h2>
+            <p class="section-lead">Connect Phloem to your AI coding tool with a single command.</p>
+            <div class="ide-grid">
+                <div class="ide-card">
+                    <div class="ide-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    </div>
+                    <div class="ide-name">Claude Code</div>
+                    <div class="ide-cmd">phloem setup claude-code</div>
+                </div>
+                <div class="ide-card">
+                    <div class="ide-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                    </div>
+                    <div class="ide-name">Cursor</div>
+                    <div class="ide-cmd">phloem setup cursor</div>
+                </div>
+                <div class="ide-card">
+                    <div class="ide-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a8 8 0 1 0-11.4 11.3"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>
+                    </div>
+                    <div class="ide-name">Windsurf</div>
+                    <div class="ide-cmd">phloem setup windsurf</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="footer-links">
             <a href="https://github.com/CanopyHQ/phloem">GitHub</a>
-            <a href="PRIVACY.html">Privacy Policy</a>
-            <a href="TERMS.html">Terms of Service</a>
-            <a href="mailto:support@canopyhq.io">Support</a>
+            <a href="https://github.com/CanopyHQ/phloem/blob/main/docs/PRIVACY.md">Privacy</a>
+            <a href="https://github.com/CanopyHQ/phloem/blob/main/LICENSE">Apache 2.0 License</a>
         </div>
-        <p class="copyright">© 2026 CanopyHQ. All rights reserved.</p>
+        <p class="copyright">Built by Canopy HQ LLC</p>
     </footer>
+
 </body>
 </html>

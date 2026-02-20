@@ -29,14 +29,6 @@ We provide Phloem "as is" without warranty. We are not responsible for:
 - Compatibility issues with AI tools (they may change their interfaces)
 - Any damages arising from use of Phloem
 
-## Cloud Sync Service (If Applicable)
-
-If you use our optional cloud sync service:
-- You must have a valid subscription
-- We may suspend service for non-payment
-- We may terminate service with 30 days notice
-- You can export your data at any time before termination
-
 ## Intellectual Property
 
 - Phloem is owned by CanopyHQ
@@ -48,7 +40,6 @@ If you use our optional cloud sync service:
 You can stop using Phloem at any time by:
 1. Uninstalling the application
 2. Deleting `~/.phloem`
-3. Removing the browser extension
 
 No notice required. No fees. No questions asked.
 

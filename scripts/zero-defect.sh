@@ -48,7 +48,7 @@ log_section() {
 log_section "LAYER 1: COMPILATION"
 
 echo "Building binary..."
-if go build -o phloem-mcp . 2>&1; then
+if go build -o phloem . 2>&1; then
     log_pass "Binary builds successfully"
 else
     log_fail "Binary failed to build"
@@ -94,165 +94,12 @@ else
 fi
 
 # ============================================================================
-# LAYER 4: INTEGRATION TESTS - NATIVE MESSAGING
+# LAYER 4: MCP PROTOCOL COMPLIANCE
 # ============================================================================
-log_section "LAYER 4: NATIVE MESSAGING INTEGRATION"
-
-echo "Testing native messaging protocol..."
-
-# This is the test that would have caught the bug we shipped
-NATIVE_TEST=$(python3 -c '
-import struct
-import json
-import subprocess
-import sys
-
-msg = json.dumps({"action": "ping"}).encode("utf-8")
-length = struct.pack("<I", len(msg))
-
-proc = subprocess.Popen(
-    ["./phloem-mcp", "native-messaging"],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE
-)
-
-proc.stdin.write(length + msg)
-proc.stdin.flush()
-
-resp_length_bytes = proc.stdout.read(4)
-if len(resp_length_bytes) == 4:
-    resp_length = struct.unpack("<I", resp_length_bytes)[0]
-    response = proc.stdout.read(resp_length).decode("utf-8")
-    data = json.loads(response)
-    if data.get("success") and data.get("data") == "pong":
-        print("PASS")
-        sys.exit(0)
-    else:
-        print(f"FAIL: unexpected response: {response}")
-        sys.exit(1)
-else:
-    stderr = proc.stderr.read().decode("utf-8")
-    print(f"FAIL: no response, stderr: {stderr}")
-    sys.exit(1)
-
-proc.terminate()
-' 2>&1)
-
-if [ "$NATIVE_TEST" = "PASS" ]; then
-    log_pass "Native messaging ping/pong works"
-else
-    log_fail "Native messaging failed: $NATIVE_TEST"
-fi
-
-# Test store_conversation action
-echo "Testing store_conversation action..."
-STORE_TEST=$(python3 -c '
-import struct
-import json
-import subprocess
-import sys
-
-msg = json.dumps({
-    "action": "store_conversation",
-    "data": {
-        "source": "test",
-        "title": "Zero Defect Test",
-        "url": "http://test.local",
-        "messages": [
-            {"role": "user", "content": "test message"},
-            {"role": "assistant", "content": "test response"}
-        ]
-    }
-}).encode("utf-8")
-length = struct.pack("<I", len(msg))
-
-proc = subprocess.Popen(
-    ["./phloem-mcp", "native-messaging"],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE
-)
-
-proc.stdin.write(length + msg)
-proc.stdin.flush()
-
-resp_length_bytes = proc.stdout.read(4)
-if len(resp_length_bytes) == 4:
-    resp_length = struct.unpack("<I", resp_length_bytes)[0]
-    response = proc.stdout.read(resp_length).decode("utf-8")
-    data = json.loads(response)
-    if data.get("success"):
-        print("PASS")
-        sys.exit(0)
-    else:
-        print(f"FAIL: {data.get(\"error\", \"unknown error\")}")
-        sys.exit(1)
-else:
-    print("FAIL: no response")
-    sys.exit(1)
-
-proc.terminate()
-' 2>&1)
-
-if [ "$STORE_TEST" = "PASS" ]; then
-    log_pass "Native messaging store_conversation works"
-else
-    log_fail "Native messaging store_conversation failed: $STORE_TEST"
-fi
-
-# Test stats action
-echo "Testing stats action..."
-STATS_TEST=$(python3 -c '
-import struct
-import json
-import subprocess
-import sys
-
-msg = json.dumps({"action": "stats"}).encode("utf-8")
-length = struct.pack("<I", len(msg))
-
-proc = subprocess.Popen(
-    ["./phloem-mcp", "native-messaging"],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE
-)
-
-proc.stdin.write(length + msg)
-proc.stdin.flush()
-
-resp_length_bytes = proc.stdout.read(4)
-if len(resp_length_bytes) == 4:
-    resp_length = struct.unpack("<I", resp_length_bytes)[0]
-    response = proc.stdout.read(resp_length).decode("utf-8")
-    data = json.loads(response)
-    if data.get("success") and "total_memories" in str(data.get("data", {})):
-        print("PASS")
-        sys.exit(0)
-    else:
-        print(f"FAIL: {response}")
-        sys.exit(1)
-else:
-    print("FAIL: no response")
-    sys.exit(1)
-
-proc.terminate()
-' 2>&1)
-
-if [ "$STATS_TEST" = "PASS" ]; then
-    log_pass "Native messaging stats works"
-else
-    log_fail "Native messaging stats failed: $STATS_TEST"
-fi
-
-# ============================================================================
-# LAYER 5: MCP PROTOCOL COMPLIANCE
-# ============================================================================
-log_section "LAYER 5: MCP PROTOCOL COMPLIANCE"
+log_section "LAYER 4: MCP PROTOCOL COMPLIANCE"
 
 echo "Testing MCP initialize..."
-MCP_INIT=$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./phloem-mcp serve 2>/dev/null | head -1)
+MCP_INIT=$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | head -1)
 if echo "$MCP_INIT" | grep -q "protocolVersion"; then
     log_pass "MCP initialize returns protocol version"
 else
@@ -260,82 +107,68 @@ else
 fi
 
 echo "Testing MCP tools/list..."
-MCP_TOOLS=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | timeout 5 ./phloem-mcp serve 2>/dev/null | head -1)
+MCP_TOOLS=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | head -1)
 if echo "$MCP_TOOLS" | grep -q "remember"; then
     log_pass "MCP tools/list returns remember tool"
 else
     log_fail "MCP tools/list failed"
 fi
 
-# ============================================================================
-# LAYER 6: EXTENSION MANIFEST VALIDATION
-# ============================================================================
-log_section "LAYER 6: EXTENSION VALIDATION"
-
-echo "Checking extension manifest..."
-if [ -f "extension/manifest.json" ]; then
-    if python3 -c "import json; json.load(open('extension/manifest.json'))" 2>&1; then
-        log_pass "Extension manifest is valid JSON"
-    else
-        log_fail "Extension manifest is invalid JSON"
-    fi
-    
-    # Check required fields
-    if grep -q '"manifest_version": 3' extension/manifest.json; then
-        log_pass "Extension uses manifest v3"
-    else
-        log_fail "Extension not using manifest v3"
-    fi
-    
-    if grep -q '"nativeMessaging"' extension/manifest.json; then
-        log_pass "Extension requests nativeMessaging permission"
-    else
-        log_fail "Extension missing nativeMessaging permission"
-    fi
+echo "Checking tool count..."
+TOOL_COUNT=$(echo "$MCP_TOOLS" | python3 -c "import sys,json; data=json.load(sys.stdin); print(len(data.get('result',{}).get('tools',[])))" 2>/dev/null || echo "0")
+if [ "$TOOL_COUNT" = "14" ]; then
+    log_pass "MCP tools/list returns 14 tools"
 else
-    log_fail "Extension manifest not found"
-fi
-
-echo "Checking content scripts exist..."
-for script in content-chatgpt.js content-claude.js content-gemini.js; do
-    if [ -f "extension/$script" ]; then
-        log_pass "Content script exists: $script"
-    else
-        log_fail "Content script missing: $script"
-    fi
-done
-
-# ============================================================================
-# LAYER 7: LICENSE SYSTEM
-# ============================================================================
-log_section "LAYER 7: LICENSE SYSTEM"
-
-echo "Testing license command..."
-if ./phloem-mcp license 2>&1 | grep -q "Tier:"; then
-    log_pass "License command works"
-else
-    log_fail "License command failed"
+    log_fail "MCP tools/list returned $TOOL_COUNT tools, expected 14"
 fi
 
 # ============================================================================
-# LAYER 8: MEMORY OPERATIONS
+# LAYER 5: MEMORY OPERATIONS
 # ============================================================================
-log_section "LAYER 8: MEMORY OPERATIONS"
+log_section "LAYER 5: MEMORY OPERATIONS"
 
 echo "Testing memory store and recall..."
 # This uses MCP protocol
-REMEMBER_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"Zero defect test memory","tags":["test","zero-defect"]}}}' | timeout 10 ./phloem-mcp serve 2>/dev/null | head -1)
+REMEMBER_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"Zero defect test memory","tags":["test","zero-defect"]}}}' | timeout 10 ./phloem serve 2>/dev/null | head -1)
 if echo "$REMEMBER_TEST" | grep -q "remembered\|stored"; then
     log_pass "Memory remember works"
 else
     log_fail "Memory remember failed: $REMEMBER_TEST"
 fi
 
-RECALL_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"recall","arguments":{"query":"zero defect test"}}}' | timeout 10 ./phloem-mcp serve 2>/dev/null | head -1)
+RECALL_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"recall","arguments":{"query":"zero defect test"}}}' | timeout 10 ./phloem serve 2>/dev/null | head -1)
 if echo "$RECALL_TEST" | grep -q "memories\|Zero defect"; then
     log_pass "Memory recall works"
 else
     log_fail "Memory recall failed"
+fi
+
+# ============================================================================
+# LAYER 6: PRIVACY VERIFICATION
+# ============================================================================
+log_section "LAYER 6: PRIVACY VERIFICATION"
+
+echo "Checking phloem makes no network connections during tool call..."
+PRIVACY_DIR=$(mktemp -d)
+export PHLOEM_DATA_DIR="$PRIVACY_DIR"
+
+# Start phloem serve in background, send a remember, then check for network sockets
+REMEMBER_REQ='{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"privacy test memory"}}}'
+echo "$REMEMBER_REQ" | timeout 5 ./phloem serve >"$PRIVACY_DIR/out" 2>/dev/null &
+PHLOEM_PID=$!
+sleep 1
+
+# Check for any network connections from this process
+NET_CONNS=$(lsof -i -a -p "$PHLOEM_PID" 2>/dev/null | grep -v "^COMMAND" || true)
+kill "$PHLOEM_PID" 2>/dev/null || true
+wait "$PHLOEM_PID" 2>/dev/null || true
+unset PHLOEM_DATA_DIR
+rm -rf "$PRIVACY_DIR"
+
+if [ -z "$NET_CONNS" ]; then
+    log_pass "No network connections during tool call"
+else
+    log_fail "Phloem opened network connections: $NET_CONNS"
 fi
 
 # ============================================================================
@@ -359,7 +192,6 @@ else
     echo ""
     echo "DO NOT RELEASE. Fix the failures above first."
     echo ""
-    echo "Remember: We shipped a broken extension because we skipped this."
-    echo "Never again."
+    echo "Zero defects. Every release."
     exit 1
 fi

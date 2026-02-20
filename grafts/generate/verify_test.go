@@ -46,8 +46,8 @@ func TestGraftFiles(t *testing.T) {
 			if manifest.MemoryCount < f.wantMinMem || manifest.MemoryCount > f.wantMaxMem {
 				t.Errorf("memory count = %d, want between %d and %d", manifest.MemoryCount, f.wantMinMem, f.wantMaxMem)
 			}
-			if manifest.Author != "Canopy Team" {
-				t.Errorf("author = %q, want %q", manifest.Author, "Canopy Team")
+			if manifest.Author != "Phloem" {
+				t.Errorf("author = %q, want %q", manifest.Author, "Phloem")
 			}
 
 			t.Logf("Name:        %s", manifest.Name)

@@ -19,7 +19,7 @@ What should have happened.
 
 ## Environment
 - OS: [e.g., macOS 14.2]
-- Phloem version: [run `phloem-mcp version`]
+- Phloem version: [run `phloem version`]
 - Client: [e.g., Cursor, Claude Desktop]
 
 ## MCP Config

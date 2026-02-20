@@ -89,7 +89,7 @@ func NewStore() (*Store, error) {
 	}
 
 	// Create directory
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create data dir: %w", err)
 	}
 
@@ -1484,6 +1484,27 @@ func (s *Store) VerifyCitation(ctx context.Context, citationID string) (*Citatio
 	}
 	if verifiedAt.Valid {
 		c.VerifiedAt = verifiedAt.Time
+	}
+
+	// Validate file path to prevent directory traversal
+	if strings.Contains(c.FilePath, "..") {
+		c.Confidence = 0.0
+		s.updateCitationConfidence(ctx, c.ID, 0.0)
+		return &c, false, fmt.Errorf("invalid file path: contains '..'")
+	}
+
+	// Check file size before reading (limit to 10MB)
+	const maxFileSize = 10 * 1024 * 1024
+	fileInfo, err := os.Stat(c.FilePath)
+	if err != nil {
+		c.Confidence = 0.0
+		s.updateCitationConfidence(ctx, c.ID, 0.0)
+		return &c, false, nil
+	}
+	if fileInfo.Size() > maxFileSize {
+		c.Confidence = 0.0
+		s.updateCitationConfidence(ctx, c.ID, 0.0)
+		return &c, false, fmt.Errorf("file too large (%d bytes, limit %d)", fileInfo.Size(), maxFileSize)
 	}
 
 	// Read the current file content

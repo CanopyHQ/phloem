@@ -1,12 +1,12 @@
 # Phloem Grafts - Shareable Memory Bundles
 
-This directory contains seed grafts for the Canopy ecosystem.
+This directory contains seed grafts for the Phloem ecosystem.
 
 ## Available Grafts
 
-### canopy-engineering-standards.graft
+### phloem-engineering-standards.graft
 
-Core patterns for Crown, Phloem, and Cambium development. Includes:
+Core patterns for Phloem development. Includes:
 - Architecture decisions
 - Best practices
 - Engineering standards
@@ -14,14 +14,14 @@ Core patterns for Crown, Phloem, and Cambium development. Includes:
 
 **Usage:**
 ```bash
-canopy graft import grafts/canopy-engineering-standards.graft
+phloem graft import grafts/phloem-engineering-standards.graft
 ```
 
 ## Creating New Grafts
 
 Export memories as grafts:
 ```bash
-canopy graft export --tags "architecture,patterns" --output my-graft.graft --name "My Graft" --desc "Description"
+phloem graft export --tags "architecture,patterns" --output my-graft.graft --name "My Graft" --desc "Description"
 ```
 
 Share grafts:
@@ -38,5 +38,5 @@ Grafts use a binary format with:
 
 Inspect without importing:
 ```bash
-canopy graft inspect my-graft.graft
+phloem graft inspect my-graft.graft
 ```

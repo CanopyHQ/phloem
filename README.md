@@ -1,215 +1,105 @@
-# 🧠 Phloem
-**Your AI's memory, synchronized across every tool you use.**
+# Phloem
 
-Canopy is a local-first memory layer that gives AI tools persistent context. Chat with Claude Code, switch to Cursor, then continue in Windsurf — your AI remembers everything. No more repeating yourself. No more lost context.
+**Local-first AI memory with causal graphs**
 
-[![Version](https://img.shields.io/badge/version-0.6.1--beta-blue)](https://github.com/CanopyHQ/canopy/releases)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/CanopyHQ/canopy)
+[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/CanopyHQ/phloem)](https://github.com/CanopyHQ/phloem/releases)
 
-> **Early Access**: Canopy is in public beta. The first 100 Pro users get **Founding Member** pricing — $5/mo locked for up to 36 months (reasonable terms apply). Core features are free.
+Phloem is a persistent memory engine for AI coding tools. It runs as an [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server, giving Claude Code, Cursor, and Windsurf long-term memory that survives across sessions. Your conversations and context are stored locally in SQLite with vector search, fully offline, zero config. Your data never leaves your machine.
 
-## The Problem
+## Why Phloem?
 
-Every AI tool today lives in a silo:
-- Cursor doesn't know what you told Claude Code
-- Your IDE agent forgets when you start a new session
-- Context gets lost when you switch between tools
-- You waste time re-explaining the same things
-
-**Your workflows span multiple AI tools. Your memory shouldn't be trapped in any single one.**
-
-## What Canopy Does
-
-Canopy creates a **unified memory layer** that works across all your AI tools. It's like having a shared brain for all your AI assistants.
-
-```bash
-# Remember something from the terminal
-$ canopy remember "Our API uses JWT tokens with 24h expiry" --tags api,auth
-
-# Your AI tools recall it automatically via MCP
-# In Cursor, Claude Code, or Windsurf — just ask about auth tokens
-# and Canopy provides the context.
-```
-
-Your AI tools connect to Canopy via [MCP](https://modelcontextprotocol.io) (Model Context Protocol), an open standard for AI tool integration. When you chat with AI in Cursor, it automatically has access to everything you've stored.
-
-### Key Features
-
-**🔒 Privacy-First**
-- All data stored locally on your device (`~/.phloem/memories.db`)
-- No cloud required, no account needed
-- You own your data completely
-
-**🌐 Cross-Tool Memory**
-- Works with Cursor, Windsurf, and Claude Code via MCP
-- Memories available everywhere, instantly
-- One source of truth for all your AI context
-
-**🔍 Semantic Search**
-- Find memories by meaning, not exact words
-- Built-in embeddings (no external API needed)
-- Fast retrieval even with thousands of memories
-
-**📎 Citation Tracking**
-- Link memories to specific code locations (file + line range)
-- Verify citations are still accurate after refactoring
-- Trace which memories are affected by code changes
-
-**📤 Portable**
-- Export as JSON or Markdown anytime
-- Import existing conversations from ChatGPT or Claude
-- Memory Grafts: shareable context bundles for team onboarding
-
-**⚡ Lightweight**
-- Native macOS binary, minimal resources
-- Works offline — no internet dependency
-- Starts in milliseconds
-
-## Installation
-
-**macOS (Homebrew):**
-```bash
-brew tap canopyhq/tap
-brew install canopy
-```
-
-**Verify Installation:**
-```bash
-canopy version
-canopy doctor    # diagnose common setup issues
-```
+- **Causal memory graphs** -- Not just vector search. Phloem builds a directed acyclic graph linking memories by cause and effect, so your AI assistant understands *why* things happened, not just *what*.
+- **Citation verification with confidence decay** -- Memories are linked to specific code locations. When code changes, confidence scores decay automatically, so stale context does not mislead your AI.
+- **Truly private** -- No accounts, no telemetry, no network calls. SQLite database on your machine. Verify it yourself with `phloem audit`.
 
 ## Quick Start
 
-### 1. Set Up IDE Integration
-
-The fastest way — auto-detects your installed IDEs:
-
 ```bash
-canopy setup
+brew install phloemhq/tap/phloem
+phloem setup
 ```
 
-Or configure a specific IDE:
+The `phloem setup` command auto-detects which IDEs you have installed (Claude Code, Cursor, Windsurf) and configures each one to use Phloem as an MCP server. That is all you need to do.
+
+## IDE Setup Guides
+
+### Claude Code
+
+From your terminal:
 
 ```bash
-canopy setup cursor
-canopy setup windsurf
-canopy setup claude-code
+phloem setup claude-code
 ```
 
-That's it. Restart your IDE, and Canopy's MCP tools are available.
+Or from within Claude Code, ask: "please run `phloem setup claude-code` in a terminal"
 
-<details>
-<summary>Manual configuration (if you prefer)</summary>
+No restart needed. The MCP server auto-starts on first tool use.
 
-**Cursor** (`~/.cursor/mcp.json`):
+Under the hood, this registers Phloem via `claude mcp add`:
+
+```bash
+claude mcp add phloem -- phloem serve
+```
+
+### Cursor
+
+From your terminal:
+
+```bash
+phloem setup cursor
+```
+
+Or from within Cursor, ask the AI to run `phloem setup cursor` in a terminal.
+
+**Restart Cursor after setup.**
+
+After setup, your `~/.cursor/mcp.json` will contain:
+
 ```json
 {
   "mcpServers": {
-    "canopy": {
-      "command": "canopy",
+    "phloem": {
+      "command": "/usr/local/bin/phloem",
       "args": ["serve"]
     }
   }
 }
 ```
 
-**Windsurf** (`~/.codeium/windsurf/mcp_config.json`):
+### Windsurf
+
+From your terminal:
+
+```bash
+phloem setup windsurf
+```
+
+Or from within Windsurf, ask the AI to run `phloem setup windsurf` in a terminal.
+
+**Restart Windsurf after setup.**
+
+After setup, your `~/.windsurf/mcp_config.json` will contain:
+
 ```json
 {
   "mcpServers": {
-    "canopy": {
-      "command": "canopy",
+    "phloem": {
+      "command": "/usr/local/bin/phloem",
       "args": ["serve"]
     }
   }
 }
 ```
 
-**Claude Code:**
-```bash
-claude mcp add canopy canopy serve
-```
-</details>
-
-### 2. Store Your First Memory
+### Auto-detect all IDEs
 
 ```bash
-# From terminal
-canopy remember "Our database schema uses UUID primary keys" --tags db,schema
-
-# Or from your IDE — just chat naturally:
-# "Remember that we're using Tailwind CSS for styling"
+phloem setup
 ```
 
-### 3. AI Tools Automatically Recall
-
-When you chat with AI in Cursor, Claude Code, or Windsurf:
-```
-You: "Show me how to create a new user"
-
-AI: [Automatically recalls your database schema via Canopy]
-    "Based on your UUID primary keys, here's how to create a user..."
-```
-
-No explicit recall needed — your AI tools fetch relevant context automatically via MCP.
-
-## Command Line Usage
-
-### Core Commands
-
-```bash
-# Store information (with optional tags)
-canopy remember "Important context about your project"
-canopy remember "API endpoints use /api/v2 prefix" --tags api,versioning
-
-# View memory statistics
-canopy status
-
-# Start MCP server (for IDE integration)
-canopy serve
-
-# Diagnose setup issues
-canopy doctor
-```
-
-> **Note**: `recall`, `forget`, and `list` are MCP tools, not CLI commands. They're available to your AI tools when connected via MCP. Use the CLI for `remember`, `status`, and `serve`.
-
-### Import Existing Conversations
-
-```bash
-# Import ChatGPT export
-canopy import chatgpt ~/Downloads/conversations.json
-
-# Import Claude conversations
-canopy import claude ~/Downloads/claude-conversations/
-```
-
-### Export Your Data
-
-```bash
-# Export as JSON
-canopy export json memories-backup.json
-
-# Export as Markdown
-canopy export markdown memories.md
-```
-
-### Memory Grafts
-
-Share curated memory collections with your team:
-
-```bash
-# Create a graft from specific tags
-canopy graft export --tags "python,best-practices" --output python-guide.graft
-
-# Share with team — teammate runs:
-canopy graft import python-guide.graft
-
-# Inspect a graft before importing
-canopy graft inspect python-guide.graft
-```
+This finds all installed IDEs and configures them in one step.
 
 ## MCP Tools Reference
 
@@ -217,199 +107,72 @@ When connected via MCP, your AI tools get these capabilities:
 
 | Tool | Description |
 |------|-------------|
-| `remember` | Store memories with tags and citations |
+| `remember` | Store a memory with optional tags and context |
 | `recall` | Semantic search across memories |
-| `forget` | Delete a specific memory |
-| `list_memories` | Browse recent memories |
-| `session_context` | Preload relevant context at session start |
-| `compose` | Combine memories from multiple topics |
+| `forget` | Delete a specific memory by ID |
+| `list_memories` | Browse recent memories, optionally filtered by tags |
+| `memory_stats` | Get statistics about the memory store |
+| `session_context` | Load context from previous sessions |
 | `add_citation` | Link a memory to a specific code location |
-| `verify_citation` | Check if cited code has changed |
-| `causal_query` | Trace which memories are affected by changes |
-| `prefetch` | Predictive memory loading for current context |
+| `verify_citation` | Check if a citation still matches the code |
+| `get_citations` | Get all citations for a memory |
+| `verify_memory` | Verify all citations for a memory |
+| `causal_query` | Query the causal memory graph (neighbors or affected) |
+| `compose` | Run two semantic searches and merge results |
+| `prefetch` | Preload relevant memories for current context |
+| `prefetch_suggest` | Suggest memories to preload for a given context |
 
-## Use Cases
+## CLI Commands
 
-### Software Development
-```bash
-# Store project conventions
-canopy remember "We use React Query for data fetching" --tags frontend
-canopy remember "Error handling uses custom ErrorBoundary" --tags frontend,errors
-
-# Your IDE agent now knows your codebase patterns
-```
-
-### Team Onboarding
-```bash
-# Export project context for new teammates
-canopy graft export --tags "architecture,conventions" --output onboarding.graft
-
-# New teammate imports it and hits the ground running
-canopy graft import onboarding.graft
-```
-
-### Cross-Tool Workflows
-```bash
-# Morning: Research in Claude Code
-# Afternoon: Code in Cursor
-# Evening: Quick fix in Windsurf
-# All sessions share the same memory
-```
+| Command | Description |
+|---------|-------------|
+| `phloem serve` | Start the MCP server (normally started by IDE) |
+| `phloem setup` | Auto-detect and configure IDEs |
+| `phloem status` | View memory statistics |
+| `phloem doctor` | Diagnose and fix configuration issues |
+| `phloem audit` | Verify privacy (data inventory, permissions, network) |
+| `phloem remember` | Store a memory from the command line |
+| `phloem verify ID` | Verify citations for a specific memory |
+| `phloem decay` | Apply confidence decay to stale citations |
+| `phloem dreams` | View the memory dream log |
+| `phloem import SOURCE PATH` | Import AI history (chatgpt or claude) |
+| `phloem export [FORMAT] [FILE]` | Export memories (json or markdown) |
+| `phloem graft` | Merge memory databases |
+| `phloem version` | Print version information |
 
 ## How It Works
 
-```
-┌─────────────────────────────────────────────────┐
-│  Your AI Tools                                  │
-│  • Cursor (MCP)                                │
-│  • Windsurf (MCP)                              │
-│  • Claude Code (MCP)                           │
-│  • Terminal CLI                                 │
-└─────────────────┬───────────────────────────────┘
-                  │
-                  ▼
-         ┌─────────────────┐
-         │  Canopy Memory  │
-         │  Layer (MCP)    │
-         └────────┬─────────┘
-                  │
-                  ▼
-         ┌─────────────────┐
-         │  Local Storage  │
-         │  ~/.phloem/     │
-         │  memories.db    │
-         └─────────────────┘
-```
+- **SQLite + sqlite-vec**: Memories stored locally in `~/.phloem/memories.db` with vector embeddings for semantic search.
+- **Causal DAG**: Memories are linked in a directed acyclic graph. When you recall a memory, Phloem can traverse the graph to find related causes and effects.
+- **Citation verification**: Memories can be linked to specific file:line locations. Phloem checks if the code still matches and decays confidence when it does not.
+- **MCP Protocol**: Communicates with IDEs via JSON-RPC over stdio. Any MCP-compatible tool can use Phloem.
 
-**MCP Protocol**: Canopy implements the [Model Context Protocol](https://modelcontextprotocol.io), an open standard for AI tool integration. Any MCP-compatible tool can connect to Canopy.
+## Privacy
 
-**Local Embeddings**: Semantic search uses TF-IDF embeddings computed locally. No external API calls, no data leaves your machine.
+- **No network calls**: Phloem makes zero network requests. Ever.
+- **No accounts**: No sign-up, no email, no personal information.
+- **No telemetry**: No analytics, no crash reporting, no usage tracking.
+- **Verify it yourself**: Run `phloem audit` to inspect your data, check permissions, and confirm no network activity.
+- **Full details**: See [PRIVACY.md](docs/PRIVACY.md)
 
-**Storage**: SQLite database at `~/.phloem/memories.db`. Plain SQL schema you can inspect or export anytime.
-
-## Cloud Sync (Optional)
+## Build from Source
 
 ```bash
-# Sign in to enable multi-device sync
-canopy signin
-
-# Or connect manually
-canopy connect
+git clone https://github.com/CanopyHQ/phloem.git
+cd phloem
+CGO_ENABLED=1 go build -o phloem .
+./phloem setup
 ```
 
-All data stays local by default. Cloud sync is opt-in for multi-device scenarios.
+Requires: Go 1.21+, C compiler (for sqlite-vec/CGO).
 
-## Privacy & Security
+## Contributing
 
-**Local-First Philosophy**
-- All memories stored on your device
-- No data transmitted without explicit action
-- No account required for core features
+Phloem is licensed under Apache 2.0. Contributions are welcome.
 
-**Telemetry**
-- Opt-in only
-- Only version, platform, and anonymous device ID
-- No content, queries, or personal data
-
-**Disable Telemetry:**
-```bash
-canopy telemetry disable
-```
-
-**Delete Everything:**
-```bash
-rm -rf ~/.phloem
-```
-
-## Storage & Performance
-
-**Storage Location**: `~/.phloem/memories.db`
-
-**Database Size**: ~1KB per memory (text + metadata + embeddings)
-- 1,000 memories ≈ 1 MB
-- 10,000 memories ≈ 10 MB
-- 100,000 memories ≈ 100 MB
-
-**Search Performance**:
-- <10ms for 10K memories
-- <50ms for 100K memories
-- Uses SQLite FTS5 + TF-IDF embeddings
-
-## Troubleshooting
-
-Run the built-in diagnostics first:
-```bash
-canopy doctor
-```
-
-**Cursor not showing Canopy tools:**
-```bash
-# Re-run setup
-canopy setup cursor
-
-# Verify MCP config exists
-cat ~/.cursor/mcp.json
-
-# Restart Cursor
-```
-
-**Canopy command not found:**
-```bash
-# If installed via Homebrew
-brew link canopy
-
-# Check it's in PATH
-which canopy
-```
-
-## Roadmap
-
-- [x] MCP server for IDE integration (Cursor, Windsurf, Claude Code)
-- [x] CLI for terminal workflows
-- [x] Local embeddings (no external dependencies)
-- [x] Memory Grafts (shareable context bundles)
-- [x] Citation tracking and verification
-- [x] Auto-setup for IDEs (`canopy setup`)
-- [x] Cloud sync for multi-device
-- [ ] Browser extension (ChatGPT/Claude capture)
-- [ ] Windows support
-- [ ] Linux support
-- [ ] VS Code extension
-- [ ] Team collaboration features
-
-## FAQ
-
-**Q: Does Canopy replace my AI tool?**
-No. Canopy adds memory to your existing AI tools. You still use Claude Code, Cursor, Windsurf, etc. — they just remember more.
-
-**Q: What's the difference between Canopy and [Mem0](https://github.com/mem0ai/mem0) / [Zep](https://github.com/getzep/zep)?**
-Canopy is local-first (no server required), uses the MCP standard (works with any compatible tool), and is designed for individual developers. Mem0/Zep are server-based memory for AI apps.
-
-**Q: Is this free?**
-Core features are free and always will be. Pro tier ($9/mo) adds cloud sync, full memory history, and priority support. Founding Members (first 100 Pro users) get $5/mo locked for up to 36 months.
-
-**Q: Is my data encrypted?**
-Data is stored in plaintext SQLite on your device. Your disk encryption (FileVault on macOS) protects it at rest.
-
-**Q: Does this work offline?**
-Yes. Core functionality works 100% offline. Only cloud sync requires internet.
-
-**Q: Why beta?**
-The core memory layer is stable and production-tested. We're in beta to gather feedback before committing to a stable API.
-
-## Support
-
-- **Email**: [support@canopyhq.io](mailto:support@canopyhq.io)
-- **CLI**: Run `canopy support` to send an email with system info pre-filled
-- **Web**: [canopyhq.io/support](https://canopyhq.io/support)
-- **Self-diagnose**: Run `canopy doctor` to check your setup
-
-## License
-
-Proprietary. Free for individual use. See [LICENSE](LICENSE).
+- Report issues: [GitHub Issues](https://github.com/CanopyHQ/phloem/issues)
+- Discuss: [GitHub Discussions](https://github.com/CanopyHQ/phloem/discussions)
 
 ---
 
-**Built by [Canopy](https://canopyhq.io)**
-
-*Part of the Canopy AI Infrastructure Platform*
+Built by [Canopy HQ LLC](https://canopyhq.io). Apache 2.0 License.

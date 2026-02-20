@@ -9,7 +9,6 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -68,57 +67,7 @@ func (f *FallbackEmbedder) Dimensions() int {
 	return f.primary.Dimensions()
 }
 
-// CambiumEmbedder uses Cambium proxy for embeddings (routes to best available provider)
-type CambiumEmbedder struct {
-	baseURL    string
-	model      string
-	dimensions int
-	client     *http.Client
-}
-
-// NewCambiumEmbedder creates an embedder using Cambium proxy
-// NOTE: Cambium doesn't currently support embeddings endpoint, so this is disabled
-func NewCambiumEmbedder() (*CambiumEmbedder, error) {
-	// Cambium doesn't have embeddings endpoint yet - skip for now
-	// TODO: Enable when Cambium adds /v1/embeddings support
-	return nil, fmt.Errorf("Cambium embeddings not yet implemented")
-
-	/*
-		// Check if Cambium is running - try common ports
-		baseURL := os.Getenv("CAMBIUM_URL")
-
-		client := &http.Client{Timeout: 2 * time.Second}
-
-		// Try configured URL first, then common ports
-		urlsToTry := []string{}
-		if baseURL != "" {
-			urlsToTry = append(urlsToTry, baseURL)
-		}
-		urlsToTry = append(urlsToTry, "http://localhost:8080", "https://cambium.canopyhq.io")
-
-		for _, url := range urlsToTry {
-			resp, err := client.Get(url + "/health")
-			if err == nil && resp.StatusCode == 200 {
-				resp.Body.Close()
-				return &CambiumEmbedder{
-					baseURL:    url,
-					model:      "text-embedding-3-small", // Cambium will route appropriately
-					dimensions: 1536,
-					client: &http.Client{
-						Timeout: 30 * time.Second,
-					},
-				}, nil
-			}
-			if resp != nil {
-				resp.Body.Close()
-			}
-		}
-
-		return nil, fmt.Errorf("Cambium not available on any port")
-	*/
-}
-
-// OpenAIEmbedder uses OpenAI's embedding API directly (fallback if Cambium not running)
+// OpenAIEmbedder uses OpenAI's embedding API directly
 type OpenAIEmbedder struct {
 	apiKey     string
 	model      string
@@ -240,28 +189,6 @@ func (e *GeminiEmbedder) EmbedBatch(texts []string) ([][]float32, error) {
 
 // Dimensions returns the embedding dimension size
 func (e *GeminiEmbedder) Dimensions() int {
-	return e.dimensions
-}
-
-// Embed generates an embedding for a single text via Cambium
-func (e *CambiumEmbedder) Embed(text string) ([]float32, error) {
-	embeddings, err := e.EmbedBatch([]string{text})
-	if err != nil {
-		return nil, err
-	}
-	if len(embeddings) == 0 {
-		return nil, fmt.Errorf("no embedding returned")
-	}
-	return embeddings[0], nil
-}
-
-// EmbedBatch generates embeddings for multiple texts via Cambium
-func (e *CambiumEmbedder) EmbedBatch(texts []string) ([][]float32, error) {
-	return callEmbeddingAPI(e.client, e.baseURL+"/v1/embeddings", "", e.model, texts)
-}
-
-// Dimensions returns the embedding dimension size
-func (e *CambiumEmbedder) Dimensions() int {
 	return e.dimensions
 }
 
@@ -667,12 +594,11 @@ func normalize(v []float32) {
 //
 // EMBEDDING STRATEGY BY USE CASE:
 // - Air-gapped: Local only (PHLOEM_AIR_GAPPED=1) - no API, no sync
-// - Canopy Org: API embeddings (performance, price insensitive) - set PHLOEM_ORG_MODE=true
+// - Phloem Org: API embeddings (performance, price insensitive) - set PHLOEM_ORG_MODE=true
 // - Admin-phloem: API embeddings (low latency, high resilience) - set PHLOEM_ADMIN_MODE=true
-// - Pro tier: API embeddings (cloud or choice); fallback to local if no API keys
-// - Free tier / unlicensed: Local embeddings by default (privacy + cost; no PHLOEM_EMBEDDINGS needed)
+// - Free tier / default: Local embeddings by default (privacy + cost; no PHLOEM_EMBEDDINGS needed)
 //
-// Explicit override: Set PHLOEM_EMBEDDINGS=openai|gemini|cambium|local (Pro can use cloud; free defaults to local)
+// Explicit override: Set PHLOEM_EMBEDDINGS=openai|gemini|local
 func GetEmbedder() Embedder {
 	embedder := getEmbedderInner()
 	// Wrap any API-based embedder with fallback to local on runtime errors
@@ -715,26 +641,19 @@ func getEmbedderInner() Embedder {
 			} else {
 				fmt.Fprintln(os.Stderr, "⚠️  PHLOEM_EMBEDDINGS=gemini but GEMINI_API_KEY not set")
 			}
-		case "cambium":
-			cambiumEmbedder, err := NewCambiumEmbedder()
-			if err == nil {
-				fmt.Fprintln(os.Stderr, "🧠 Using Cambium proxy for embeddings (explicit override)")
-				return cambiumEmbedder
-			}
-			fmt.Fprintf(os.Stderr, "⚠️  Cambium embedder failed: %v, falling back\n", err)
 		case "local":
 			fmt.Fprintln(os.Stderr, "🧠 Using local embeddings (explicit override)")
 			return NewLocalEmbedder()
 		}
 	}
 
-	// 2. Canopy Org mode: Performance-focused, price insensitive → API embeddings
+	// 2. Phloem Org mode: Performance-focused, price insensitive → API embeddings
 	if os.Getenv("PHLOEM_ORG_MODE") == "true" || os.Getenv("PHLOEM_ORG_MODE") == "1" {
 		// Try OpenAI first (best quality)
 		if os.Getenv("OPENAI_API_KEY") != "" {
 			embedder, err := NewOpenAIEmbedder()
 			if err == nil {
-				fmt.Fprintln(os.Stderr, "🧠 Using OpenAI embeddings (Canopy org mode - performance)")
+				fmt.Fprintln(os.Stderr, "🧠 Using OpenAI embeddings (Phloem org mode - performance)")
 				return embedder
 			}
 		}
@@ -742,11 +661,11 @@ func getEmbedderInner() Embedder {
 		if os.Getenv("GEMINI_API_KEY") != "" {
 			embedder, err := NewGeminiEmbedder()
 			if err == nil {
-				fmt.Fprintln(os.Stderr, "🧠 Using Gemini embeddings (Canopy org mode - performance)")
+				fmt.Fprintln(os.Stderr, "🧠 Using Gemini embeddings (Phloem org mode - performance)")
 				return embedder
 			}
 		}
-		fmt.Fprintln(os.Stderr, "⚠️  Canopy org mode but no API keys found, falling back to local")
+		fmt.Fprintln(os.Stderr, "⚠️  Phloem org mode but no API keys found, falling back to local")
 	}
 
 	// 3. Admin mode: Low latency, high resilience → API embeddings
@@ -770,62 +689,8 @@ func getEmbedderInner() Embedder {
 		fmt.Fprintln(os.Stderr, "⚠️  Admin mode but no API keys found, falling back to local")
 	}
 
-	// 4. Check license tier (Pro = API embeddings for intra-device sync + AI features)
-	tier := loadLicenseTier()
-	if tier == "pro" {
-		// Pro tier: Use API embeddings for better quality and AI memory features
-		if os.Getenv("OPENAI_API_KEY") != "" {
-			embedder, err := NewOpenAIEmbedder()
-			if err == nil {
-				fmt.Fprintln(os.Stderr, "🧠 Using OpenAI embeddings (Pro tier - intra-device sync enabled)")
-				return embedder
-			}
-		}
-		if os.Getenv("GEMINI_API_KEY") != "" {
-			embedder, err := NewGeminiEmbedder()
-			if err == nil {
-				fmt.Fprintln(os.Stderr, "🧠 Using Gemini embeddings (Pro tier - intra-device sync enabled)")
-				return embedder
-			}
-		}
-	}
-
-	// 5. Default: Local embeddings (privacy + cost)
+	// 4. Default: Local embeddings (privacy + cost)
 	fmt.Fprintln(os.Stderr, "🧠 Using local embeddings")
 	return NewLocalEmbedder()
 }
 
-// loadLicenseTier checks the license file to determine tier (avoids circular dependency)
-func loadLicenseTier() string {
-	dataDir := os.Getenv("PHLOEM_DATA_DIR")
-	if dataDir == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "free" // Default to free
-		}
-		dataDir = filepath.Join(home, ".phloem")
-	}
-
-	licensePath := filepath.Join(dataDir, "license.json")
-	data, err := os.ReadFile(licensePath)
-	if err != nil {
-		return "free" // No license = free tier
-	}
-
-	var license struct {
-		Tier      string    `json:"tier"`
-		ExpiresAt time.Time `json:"expires_at"`
-	}
-	if err := json.Unmarshal(data, &license); err != nil {
-		return "free"
-	}
-
-	// Check expiration
-	if license.Tier == "pro" && !license.ExpiresAt.IsZero() {
-		if time.Now().After(license.ExpiresAt) {
-			return "free" // Expired = free tier
-		}
-	}
-
-	return license.Tier
-}

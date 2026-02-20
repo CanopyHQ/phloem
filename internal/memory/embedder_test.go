@@ -181,16 +181,6 @@ func testVectorsEqual(a, b []float32) bool {
 	return true
 }
 
-func TestNewCambiumEmbedder_NotImplemented(t *testing.T) {
-	emb, err := NewCambiumEmbedder()
-	if err == nil {
-		t.Fatal("expected error (Cambium embeddings not yet implemented)")
-	}
-	if emb != nil {
-		t.Error("expected nil embedder")
-	}
-}
-
 func TestNewOpenAIEmbedder_NoAPIKey(t *testing.T) {
 	// Ensure no key is set for this test
 	old := os.Getenv("OPENAI_API_KEY")

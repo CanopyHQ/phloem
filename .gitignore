@@ -1,6 +1,4 @@
 # Binary
-phloem-mcp
-phloem-mcp.exe
 phloem
 phloem-intel
 phloem-apple-silicon
@@ -11,10 +9,6 @@ coverage.html
 coverage_*.out
 cov_*.out
 *.out
-/arbor.html
-/audit.html
-/guardian.html
-/unified.html
 
 # IDE
 .idea/

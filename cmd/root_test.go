@@ -38,7 +38,7 @@ func TestExecute_Help(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "Phloem") {
-		t.Errorf("help output should contain 'Canopy': %q", out)
+		t.Errorf("help output should contain 'Phloem': %q", out)
 	}
 }
 

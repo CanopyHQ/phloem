@@ -21,10 +21,9 @@ var graftCmd = &cobra.Command{
 	Long: `Create, import, and inspect shareable memory bundles (grafts).
 
 Examples:
-  canopy graft export --tags "architecture,patterns" --output arch.graft
-  canopy graft import arch.graft
-  canopy graft import --from https://canopyhq.fly.dev/api/grafts/<id>/download
-  canopy graft inspect arch.graft`,
+  phloem graft export --tags "architecture,patterns" --output arch.graft
+  phloem graft import arch.graft
+  phloem graft inspect arch.graft`,
 }
 
 func init() {
@@ -231,10 +230,15 @@ func runGraftImport(fromURL, filePath string) error {
 }
 
 // downloadGraftFromRegistry downloads a .graft file from a URL to a temp file
-func downloadGraftFromRegistry(url string) string {
-	fmt.Printf("📥 Downloading graft from %s...\n", url)
+func downloadGraftFromRegistry(rawURL string) string {
+	fmt.Printf("📥 Downloading graft from %s...\n", rawURL)
 
-	resp, err := http.Get(url)
+	if !strings.HasPrefix(rawURL, "https://") {
+		fmt.Println("❌ Only HTTPS URLs are supported for graft downloads")
+		return ""
+	}
+
+	resp, err := http.Get(rawURL)
 	if err != nil {
 		fmt.Printf("❌ Failed to download: %v\n", err)
 		return ""
@@ -252,7 +256,9 @@ func downloadGraftFromRegistry(url string) string {
 		return ""
 	}
 
-	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+	// Limit download to 50MB to prevent disk exhaustion
+	limited := io.LimitReader(resp.Body, 50*1024*1024)
+	if _, err := io.Copy(tmpFile, limited); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpFile.Name())
 		fmt.Printf("❌ Failed to save graft: %v\n", err)

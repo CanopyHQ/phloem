@@ -18,22 +18,17 @@ import (
 )
 
 func main() {
-	// Determine output directory (same as this file's parent, i.e. phloem/grafts/)
-	outputDir := filepath.Join(".", "phloem", "grafts")
+	// Determine output directory (grafts/ relative to repo root)
+	outputDir := filepath.Join(".", "grafts")
 
-	// If run from the phloem directory itself, adjust
-	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
-		// Try relative to current working directory
+	// If grafts/ doesn't exist here, try to find it
+	if info, err := os.Stat(outputDir); err != nil || !info.IsDir() {
 		cwd, _ := os.Getwd()
-		// Check if we are inside phloem/grafts/generate
 		if filepath.Base(cwd) == "generate" {
 			outputDir = filepath.Dir(cwd)
 		} else if filepath.Base(cwd) == "grafts" {
 			outputDir = cwd
-		} else if filepath.Base(cwd) == "phloem" {
-			outputDir = filepath.Join(cwd, "grafts")
 		} else {
-			// Fallback: write to current directory
 			outputDir = cwd
 		}
 	}
@@ -49,7 +44,7 @@ func main() {
 				ID:          "go-best-practices-v1",
 				Name:        "Go Best Practices",
 				Description: "Curated memory seeds for idiomatic Go development: error handling, testing, concurrency, and API design patterns.",
-				Author:      "Canopy Team",
+				Author:      "Phloem",
 				Version:     "1.0.0",
 				CreatedAt:   time.Now().UTC(),
 				MemoryCount: len(goBestPractices()),
@@ -63,7 +58,7 @@ func main() {
 				ID:          "react-patterns-v1",
 				Name:        "React Patterns",
 				Description: "Curated memory seeds for modern React development: hooks, component patterns, state management, and testing.",
-				Author:      "Canopy Team",
+				Author:      "Phloem",
 				Version:     "1.0.0",
 				CreatedAt:   time.Now().UTC(),
 				MemoryCount: len(reactPatterns()),
@@ -77,7 +72,7 @@ func main() {
 				ID:          "security-essentials-v1",
 				Name:        "Security Essentials",
 				Description: "Curated memory seeds for application security: OWASP Top 10, authentication, authorization, and secure coding practices.",
-				Author:      "Canopy Team",
+				Author:      "Phloem",
 				Version:     "1.0.0",
 				CreatedAt:   time.Now().UTC(),
 				MemoryCount: len(securityEssentials()),

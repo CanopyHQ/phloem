@@ -15,8 +15,8 @@ var rememberCmd = &cobra.Command{
 	Long: `Store a memory in Phloem with optional tags.
 
 Examples:
-  canopy remember "always use snake_case for Go test names"
-  canopy remember "prefer composition over inheritance" --tags "architecture,patterns"`,
+  phloem remember "always use snake_case for Go test names"
+  phloem remember "prefer composition over inheritance" --tags "architecture,patterns"`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tagsStr, _ := cmd.Flags().GetString("tags")
@@ -30,7 +30,7 @@ func init() {
 
 func runRemember(content, tagsStr string) error {
 	if content == "" {
-		fmt.Println("Usage: canopy remember \"<content>\" [--tags \"tag1,tag2,...\"]")
+		fmt.Println("Usage: phloem remember \"<content>\" [--tags \"tag1,tag2,...\"]")
 		return nil
 	}
 	store, err := memory.NewStore()

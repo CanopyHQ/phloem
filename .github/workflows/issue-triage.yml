@@ -41,7 +41,7 @@ jobs:
 3. Once confirmed, it goes into the fix queue
 
 **While you wait:**
-- Check if there's a workaround in [the docs](https://canopyhq.io/docs/phloem)
+- Check if there's a workaround in [the docs](https://github.com/CanopyHQ/phloem)
 - Try \`phloem --version\` to confirm you're on the latest version
 
 I'll get back to you soon!`;
@@ -57,7 +57,7 @@ I'll get back to you soon!`;
 2. If it aligns with the roadmap, I'll add it to planning
 3. Popular requests get prioritized
 
-**Note:** Cambium is maintained by one person, so I focus on high-impact features. The best way to increase priority is to 👍 react to issues you care about!`;
+**Note:** Phloem is maintained by one person, so I focus on high-impact features. The best way to increase priority is to 👍 react to issues you care about!`;
             }
             
             // Questions
@@ -66,9 +66,9 @@ I'll get back to you soon!`;
               response = `Thanks for your question! ❓
 
 **Quick resources:**
-- [Documentation](https://canopyhq.io/docs/phloem)
-- [Getting Started Guide](https://canopyhq.io/docs/phloem/getting-started)
-- [FAQ](https://canopyhq.io/docs/phloem/faq)
+- [Documentation](https://github.com/CanopyHQ/phloem)
+- [Getting Started Guide](https://github.com/CanopyHQ/phloem#getting-started)
+- [FAQ](https://github.com/CanopyHQ/phloem#faq)
 
 If the docs don't answer your question, I'll respond within 48 hours!`;
             }
@@ -81,7 +81,7 @@ If the docs don't answer your question, I'll respond within 48 hours!`;
 I'll review it within 48 hours and respond with next steps.
 
 **Helpful info to include (if not already):**
-- Cambium version (\`phloem --version\`)
+- Phloem version (\`phloem --version\`)
 - OS and version
 - Steps to reproduce (if applicable)`;
             }

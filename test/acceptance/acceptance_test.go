@@ -123,11 +123,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the Phloem system is initialized$`, tc.systemInitialized)
 
 	// Additional steps for auto-ingestion and other features
-	ctx.Step(`^the transcript watcher is configured$`, tc.transcriptWatcherConfigured)
-	ctx.Step(`^the transcript watcher is running$`, tc.transcriptWatcherRunning)
-	ctx.Step(`^new content is added to a transcript file$`, tc.newContentAdded)
-	ctx.Step(`^the watcher should detect the change$`, tc.watcherDetectsChange)
-	ctx.Step(`^the new content should be ingested$`, tc.newContentIngested)
 	ctx.Step(`^a transcript with user message "([^"]*)"$`, tc.transcriptWithUserMessage)
 	ctx.Step(`^the transcript is ingested$`, tc.transcriptIngested)
 	ctx.Step(`^a memory should be created with role "([^"]*)"$`, tc.memoryCreatedWithRole)
@@ -171,7 +166,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive an error$`, tc.checkErrorResponse)
 	ctx.Step(`^the error should indicate invalid format$`, tc.errorIndicatesInvalidFormat)
 
-	// CLI steps (run canopy commands, assert exit code and output)
+	// CLI steps (run phloem commands, assert exit code and output)
 	ctx.Step(`^Phloem is installed$`, tc.phloemInstalled)
 	ctx.Step(`^I run "([^"]*)"$`, tc.runCLICommand)
 	ctx.Step(`^the command should succeed$`, tc.checkCommandSucceeded)

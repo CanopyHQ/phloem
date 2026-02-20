@@ -144,15 +144,25 @@ func TestExecute_Export_DefaultOutput(t *testing.T) {
 	tmpDir := t.TempDir()
 	os.Setenv("PHLOEM_DATA_DIR", tmpDir)
 	defer os.Unsetenv("PHLOEM_DATA_DIR")
+
+	// Change to a temp dir so the default output file doesn't leak into the source tree
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd: %v", err)
+	}
+	outputDir := t.TempDir()
+	if err := os.Chdir(outputDir); err != nil {
+		t.Fatalf("Chdir: %v", err)
+	}
+	defer os.Chdir(origDir)
+
 	restoreRemember := setArgs("phloem", "remember", "export default output test")
 	_ = Execute()
 	restoreRemember()
 	// export json with no output path -> default filename phloem-export-YYYY-MM-DD.json
 	defer setArgs("phloem", "export", "json")()
-	err := Execute()
+	err = Execute()
 	if err != nil {
 		t.Fatalf("Execute(export json): %v", err)
 	}
-	// Default file is created in cwd; we're in tmpDir for data but cwd may differ
-	_ = err
 }

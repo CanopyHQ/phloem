@@ -1,6 +1,6 @@
 # Phloem MCP Makefile
 
-.PHONY: build install clean test run help quality check pre-commit
+.PHONY: build install clean test run help quality check pre-commit preflight preflight-release verify-privacy verify-install ci-local
 
 # Binary name (phloem for monorepo/CI; matches release-gate cp phloem/phloem)
 BINARY=phloem
@@ -134,7 +134,7 @@ acceptance:
 ## acceptance-smoke: Run smoke acceptance tests only
 acceptance-smoke:
 	@echo "Running smoke acceptance tests..."
-	GODOG_TAGS="@smoke" go test -v ./test/acceptance/... -run TestSmokeFeatures
+	go test -v ./test/acceptance/... -run TestSmokeFeatures
 
 ## acceptance-critical: Run critical acceptance tests only
 acceptance-critical:
@@ -162,6 +162,60 @@ zero-defect: build
 	@echo "Running zero-defect release gate..."
 	@./scripts/zero-defect.sh
 
+## preflight: Fast local check before committing (~30s)
+preflight: build
+	@echo "Running preflight checks..."
+	@echo ""
+	@echo "1/4 go vet..."
+	@go vet ./...
+	@echo "2/4 Build... (already done)"
+	@echo "3/4 Unit tests (short)..."
+	@go test -short ./...
+	@echo "4/4 MCP protocol check..."
+	@TOOL_COUNT=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -c protocolVersion); \
+	if [ "$$TOOL_COUNT" -eq 1 ]; then echo "MCP initialize: OK"; else echo "MCP initialize: FAILED"; exit 1; fi
+	@echo ""
+	@echo "Preflight PASSED - ready to commit"
+
+## preflight-release: Thorough check before tagging a release (~2min)
+preflight-release: preflight
+	@echo ""
+	@echo "Running release preflight..."
+	@echo ""
+	@echo "1/4 Full test suite (no cache)..."
+	@go test -v -count=1 ./...
+	@echo "2/4 Race detector..."
+	@go test -race -short ./...
+	@echo "3/4 Privacy verification..."
+	@if [ -f scripts/verify-privacy.sh ]; then bash scripts/verify-privacy.sh; else echo "verify-privacy.sh not found, skipping"; fi
+	@echo "4/4 Zero-defect gate..."
+	@if [ -f scripts/zero-defect.sh ]; then bash scripts/zero-defect.sh; else echo "zero-defect.sh not found, skipping"; fi
+	@echo ""
+	@echo "Release preflight PASSED"
+
+## verify-privacy: Verify Phloem makes no network connections
+verify-privacy: build
+	@echo "Running privacy verification..."
+	@if [ -f scripts/verify-privacy.sh ]; then bash scripts/verify-privacy.sh; else echo "verify-privacy.sh not found"; exit 1; fi
+
+## verify-install: Verify IDE setup commands work correctly
+verify-install: build
+	@echo "Running install verification..."
+	@if [ -f scripts/verify-install.sh ]; then bash scripts/verify-install.sh; else echo "verify-install.sh not found"; exit 1; fi
+
+## ci-local: Mirror what GitHub Actions CI runs
+ci-local: preflight lint
+	@echo ""
+	@echo "Running full CI locally..."
+	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@COVERAGE=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+	echo "Coverage: $${COVERAGE}%"; \
+	if [ $$(echo "$$COVERAGE < 70" | bc -l) -eq 1 ]; then \
+		echo "Coverage below 70% threshold"; exit 1; \
+	fi
+	@echo ""
+	@echo "Local CI PASSED"
+
 ## help: Show this help
 help:
 	@echo "Phloem MCP - Local-first AI memory with causal graphs"
@@ -181,12 +235,17 @@ help:
 	@echo "  make mcp-test      Test MCP protocol"
 	@echo "  make acceptance    Run Gherkin acceptance tests"
 	@echo "  make acceptance-smoke Run smoke tests only"
+	@echo "  make preflight     Fast local check before committing (~30s)"
+	@echo "  make preflight-release Thorough check before tagging a release (~2min)"
 	@echo ""
 	@echo "Quality:"
 	@echo "  make quality       Full quality gate"
 	@echo "  make check         Quick check"
 	@echo "  make pre-commit    Pre-commit checks"
 	@echo "  make zero-defect   MANDATORY before release"
+	@echo "  make verify-privacy Verify no network connections"
+	@echo "  make verify-install Verify IDE setup commands"
+	@echo "  make ci-local      Mirror GitHub Actions CI locally"
 	@echo ""
 	@echo "Setup:"
 	@echo "  make cursor-config Show Cursor configuration"

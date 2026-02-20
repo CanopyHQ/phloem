@@ -68,18 +68,6 @@ This document maps every documented feature to its corresponding tests, ensuring
 
 ---
 
-## Cloud Sync (`internal/sync/client.go`)
-
-| Feature | Unit Test | Integration | Edge Cases | Status |
-|---------|-----------|-------------|------------|--------|
-| **Config loading** | - | - | - | ⚠️ Needs tests |
-| **Sync upload** | - | - | - | ⚠️ Needs tests |
-| **Sync download** | - | - | - | ⚠️ Needs tests |
-| **API key auth** | - | - | - | ⚠️ Needs tests |
-| **Error handling** | - | - | - | ⚠️ Needs tests |
-
----
-
 ## CLI Commands (`cmd/root.go`)
 
 | Feature | Unit Test | Integration | Edge Cases | Status |
@@ -100,7 +88,6 @@ This document maps every documented feature to its corresponding tests, ensuring
 |---------|-------|----------|--------|
 | `internal/memory` | 36 | ~90% | 80% ✅ |
 | `internal/mcp` | 25 | ~85% | 80% ✅ |
-| `internal/sync` | 0 | 0% | 60% ❌ |
 | `cmd` | 0 | 0% | 60% ❌ |
 
 ---

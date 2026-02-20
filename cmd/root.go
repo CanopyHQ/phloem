@@ -60,4 +60,7 @@ func init() {
 
 	// graft (defined in graft.go)
 	rootCmd.AddCommand(graftCmd)
+
+	// audit (defined in audit.go)
+	rootCmd.AddCommand(auditCmd)
 }

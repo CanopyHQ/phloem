@@ -1,4 +1,4 @@
-name: Release Canopy
+name: Release Phloem
 
 on:
   push:
@@ -28,6 +28,6 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
-          workdir: phloem
+          workdir: .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

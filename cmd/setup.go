@@ -120,16 +120,6 @@ func runSetupCursor() error {
 	}
 	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
 
-	// Check for cambium binary (optional but recommended)
-	cambiumPath, err := exec.LookPath("cambium")
-	hasCambium := err == nil
-	if hasCambium {
-		fmt.Printf("✓ Found cambium at: %s\n", cambiumPath)
-	} else {
-		fmt.Println("⚠️  Cambium not found (skipping MCP config for Cambium)")
-		fmt.Println("   (Install with 'brew install phloemhq/tap/phloem' to get full features)")
-	}
-
 	// 2. Locate Cursor config directory
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -172,20 +162,13 @@ func runSetupCursor() error {
 		"args":    []string{"serve"},
 	}
 
-	if hasCambium {
-		mcpServers["cambium"] = map[string]interface{}{
-			"command": cambiumPath,
-			"args":    []string{"mcp", "serve"},
-		}
-	}
-
 	// 6. Write config back
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write mcp.json: %w", err)
 	}
 
@@ -202,6 +185,9 @@ func runSetupCursor() error {
 	fmt.Println("Commands:")
 	fmt.Println("  phloem status   - View memory statistics")
 	fmt.Println("  phloem help     - See all commands")
+	fmt.Println()
+	fmt.Println("Tip: You can also set up from within your IDE.")
+	fmt.Println("  Ask your AI assistant: \"please run phloem setup cursor in a terminal\"")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	return nil
@@ -295,6 +281,9 @@ func runSetupClaudeCode() error {
 	fmt.Println("Commands:")
 	fmt.Println("  phloem status   - View memory statistics")
 	fmt.Println("  phloem help     - See all commands")
+	fmt.Println()
+	fmt.Println("Tip: You can also set up from within your IDE.")
+	fmt.Println("  Ask your AI assistant: \"please run phloem setup claude-code in a terminal\"")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	return nil
@@ -311,15 +300,6 @@ func runSetupWindsurf() error {
 		return fmt.Errorf("phloem binary not found in PATH. Please install via Homebrew or add to PATH")
 	}
 	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
-
-	// Check for cambium binary (optional but recommended)
-	cambiumPath, err := exec.LookPath("cambium")
-	hasCambium := err == nil
-	if hasCambium {
-		fmt.Printf("✓ Found cambium at: %s\n", cambiumPath)
-	} else {
-		fmt.Println("⚠️  Cambium not found (skipping MCP config for Cambium)")
-	}
 
 	// 2. Locate Windsurf config directory
 	home, err := os.UserHomeDir()
@@ -363,20 +343,13 @@ func runSetupWindsurf() error {
 		"args":    []string{"serve"},
 	}
 
-	if hasCambium {
-		mcpServers["cambium"] = map[string]interface{}{
-			"command": cambiumPath,
-			"args":    []string{"mcp", "serve"},
-		}
-	}
-
 	// 6. Write config back
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write mcp_config.json: %w", err)
 	}
 
@@ -393,6 +366,9 @@ func runSetupWindsurf() error {
 	fmt.Println("Commands:")
 	fmt.Println("  phloem status   - View memory statistics")
 	fmt.Println("  phloem help     - See all commands")
+	fmt.Println()
+	fmt.Println("Tip: You can also set up from within your IDE.")
+	fmt.Println("  Ask your AI assistant: \"please run phloem setup windsurf in a terminal\"")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	return nil

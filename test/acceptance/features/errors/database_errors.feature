@@ -1,38 +1,38 @@
 @wip
 Feature: Database Error Handling
-  As a Canopy user
+  As a Phloem user
   I want graceful handling of database errors
   So that I don't lose data and can recover from issues
 
   Background:
-    Given Canopy is installed
+    Given Phloem is installed
 
   @critical
   Scenario: Database locked by another process
-    Given the database is locked by another canopy process
-    When I run "canopy status"
+    Given the database is locked by another phloem process
+    When I run "phloem status"
     Then the command should fail with exit code 1
     And the error should contain "database is locked"
-    And the error should suggest closing other Canopy instances
+    And the error should suggest closing other Phloem instances
 
   @critical
   Scenario: Database file corrupted
     Given the database file is corrupted
-    When I run "canopy status"
+    When I run "phloem status"
     Then the command should fail
     And the error should contain "database"
-    And the error should suggest running "canopy doctor"
+    And the error should suggest running "phloem doctor"
 
   Scenario: Database file missing
     Given the database file does not exist
-    When I run "canopy status"
+    When I run "phloem status"
     Then a new database should be created
     And the command should succeed
     And the output should show "Total Memories: 0"
 
   Scenario: Database directory not writable
     Given "~/.phloem" is not writable
-    When I run "canopy remember 'test'"
+    When I run "phloem remember 'test'"
     Then the command should fail
     And the error should contain "permission denied"
 
@@ -45,7 +45,7 @@ Feature: Database Error Handling
 
   Scenario: Database schema migration
     Given I have an old database schema version
-    When I run "canopy status"
+    When I run "phloem status"
     Then the database should be migrated automatically
     And the command should succeed
     And existing data should be preserved
@@ -58,7 +58,7 @@ Feature: Database Error Handling
 
   Scenario: Recovery from WAL corruption
     Given the SQLite WAL file is corrupted
-    When I run "canopy status"
+    When I run "phloem status"
     Then the command should attempt recovery
     And the error should provide recovery instructions
 

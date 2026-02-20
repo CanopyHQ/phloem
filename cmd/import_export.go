@@ -25,8 +25,8 @@ Supported sources:
 The path can be a single JSON file or a directory containing JSON files.
 
 Examples:
-  canopy import chatgpt ~/Downloads/conversations.json
-  canopy import claude ~/Downloads/claude-export/`,
+  phloem import chatgpt ~/Downloads/conversations.json
+  phloem import claude ~/Downloads/claude-export/`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error { return runImport(args[0], args[1]) },
 }
@@ -43,9 +43,9 @@ Supported formats:
 If no output path is given, a default filename is generated.
 
 Examples:
-  canopy export
-  canopy export json memories.json
-  canopy export markdown memories.md`,
+  phloem export
+  phloem export json memories.json
+  phloem export markdown memories.md`,
 	Args: cobra.MaximumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		format, output := "json", ""

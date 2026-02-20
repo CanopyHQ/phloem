@@ -32,9 +32,11 @@ func NewServer() (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize memory store: %w", err)
 	}
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // Allow up to 1MB messages
 	return &Server{
 		store:   store,
-		scanner: bufio.NewScanner(os.Stdin),
+		scanner: scanner,
 	}, nil
 }
 
@@ -119,7 +121,7 @@ func (s *Server) handleInitialize(req *JSONRPCRequest) {
 			"prompts":   map[string]interface{}{},
 		},
 		"serverInfo": map[string]interface{}{
-			"name":    "phloem-mcp",
+			"name":    "phloem",
 			"version": "0.1.0",
 		},
 	}

@@ -155,7 +155,7 @@ func TestHandleInitialize(t *testing.T) {
 	if !ok {
 		t.Error("serverInfo missing")
 	}
-	if info["name"] != "phloem-mcp" {
+	if info["name"] != "phloem" {
 		t.Errorf("unexpected server name: %v", info["name"])
 	}
 }

@@ -4,7 +4,7 @@
 
 Current state: AI wakes up stateless every session. Manual `remember` calls that I forget to make. TF-IDF embeddings that don't understand semantics. 12 memories total after weeks of work.
 
-Duncan's vision: Continuous context stream → Vector graph → RAG preload → AI starts sessions already knowing.
+Architecture vision: Continuous context stream → Vector graph → RAG preload → AI starts sessions already knowing.
 
 ## Design Principles
 
@@ -309,7 +309,7 @@ func MigrateV1ToV2(v1Store *memory.Store, v2Store VectorStore, embedder Embedder
 - Test with real sessions
 
 ### Phase 5: Local Embeddings (optional, 4+ hours)
-- **Done (Stage 3):** Local embedder exists (`PHLOEM_EMBEDDINGS=local`). Air-gapped mode (`PHLOEM_AIR_GAPPED=1`) forces local embedder and disables cloud sync; fully offline operation.
+- **Done (Stage 3):** Local embedder exists (`PHLOEM_EMBEDDINGS=local`). Air-gapped mode (`PHLOEM_AIR_GAPPED=1`) forces local embedder and disables all network calls; fully offline operation.
 - Integrate ONNX runtime / on-device model from `opus-s/feat/on-device-embeddings` when merging that branch.
 
 ## Storage Estimates

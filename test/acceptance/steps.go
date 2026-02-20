@@ -37,13 +37,13 @@ type TestContext struct {
 	lastCLIExitCode int
 }
 
-// setupTestServer starts the phloem-mcp binary for testing
+// setupTestServer starts the phloem binary for testing
 func setupTestServer() error {
 	if testServerCmd != nil {
 		return nil // Already running
 	}
 
-	// Find phloem-mcp binary
+	// Find phloem binary
 	binaryPath := os.Getenv("PHLOEM_TEST_BINARY")
 	if binaryPath == "" {
 		// Try to find it in current directory or build it
@@ -499,114 +499,6 @@ func (tc *TestContext) checkResponseData(expected string) error {
 	return nil
 }
 
-func (tc *TestContext) noLicenseConfigured() error {
-	// Clear any existing license
-	home, _ := os.UserHomeDir()
-	licenseFile := filepath.Join(home, ".phloem", "license.json")
-	os.Remove(licenseFile)
-	return nil
-}
-
-func (tc *TestContext) checkLicenseStatus() error {
-	if err := setupTestServer(); err != nil {
-		return err
-	}
-
-	req := map[string]interface{}{
-		"jsonrpc": "2.0",
-		"id":      1,
-		"method":  "tools/call",
-		"params": map[string]interface{}{
-			"name":      "license_status",
-			"arguments": map[string]interface{}{},
-		},
-	}
-
-	reqJSON, _ := json.Marshal(req)
-	reqJSON = append(reqJSON, '\n')
-
-	if _, err := testServerStdin.Write(reqJSON); err != nil {
-		return err
-	}
-
-	resp, err := readServerResponse()
-	if err != nil {
-		return err
-	}
-
-	if result, ok := resp["result"].(map[string]interface{}); ok {
-		tc.lastResponse = result
-	} else {
-		return fmt.Errorf("invalid response format")
-	}
-
-	return nil
-}
-
-func (tc *TestContext) checkTier(tier string) error {
-	if tc.lastResponse == nil {
-		return fmt.Errorf("no response received")
-	}
-
-	// Parse response content
-	content, ok := tc.lastResponse["content"].([]interface{})
-	if !ok {
-		return fmt.Errorf("content missing")
-	}
-
-	// Extract tier from response text
-	for _, item := range content {
-		itemMap := item.(map[string]interface{})
-		if text, ok := itemMap["text"].(string); ok {
-			if strings.Contains(strings.ToLower(text), strings.ToLower(tier)) {
-				return nil
-			}
-		}
-	}
-
-	return fmt.Errorf("tier %s not found in response", tier)
-}
-
-func (tc *TestContext) checkMemoryWindow(days int) error {
-	if tc.lastResponse == nil {
-		return fmt.Errorf("no response received")
-	}
-
-	// First check if memory_window_days is in the response directly
-	if content, ok := tc.lastResponse["content"].([]interface{}); ok {
-		for _, item := range content {
-			itemMap := item.(map[string]interface{})
-			if text, ok := itemMap["text"].(string); ok {
-				// Parse JSON from text
-				var result map[string]interface{}
-				if err := json.Unmarshal([]byte(text), &result); err == nil {
-					if windowDays, ok := result["memory_window_days"].(float64); ok {
-						if int(windowDays) == days {
-							return nil
-						}
-					}
-				}
-
-				// Also check text for various formats
-				expectedFormats := []string{
-					fmt.Sprintf("%d-day", days),
-					fmt.Sprintf("%d days", days),
-					fmt.Sprintf("%d-day window", days),
-					fmt.Sprintf("%d day", days),
-				}
-
-				for _, format := range expectedFormats {
-					if strings.Contains(text, format) {
-						return nil
-					}
-				}
-			}
-		}
-	}
-
-	return fmt.Errorf("memory window %d days not found in response", days)
-}
-
 func (tc *TestContext) mcpServerRunning() error {
 	// Server will be started when needed
 	return nil
@@ -689,40 +581,11 @@ func (tc *TestContext) memoryStoreInitialized() error {
 	return nil
 }
 
-func (tc *TestContext) nativeHostAvailable() error {
-	// Native host will be created when needed
-	return nil
-}
-
 func (tc *TestContext) systemInitialized() error {
 	// System is initialized
 	return nil
 }
 
-func (tc *TestContext) transcriptWatcherConfigured() error {
-	// Watcher configuration is handled by environment variables
-	return nil
-}
-
-func (tc *TestContext) transcriptWatcherRunning() error {
-	// Watcher would be started in background for real tests
-	return nil
-}
-
-func (tc *TestContext) newContentAdded() error {
-	// Would create test transcript file and add content
-	return nil
-}
-
-func (tc *TestContext) watcherDetectsChange() error {
-	// Would verify watcher detected file change
-	return nil
-}
-
-func (tc *TestContext) newContentIngested() error {
-	// Would verify new content was stored as memory
-	return nil
-}
 
 func (tc *TestContext) transcriptWithUserMessage(message string) error {
 	// Create test transcript file and store message
@@ -1409,7 +1272,7 @@ func ensureCLIBinary() (string, error) {
 		}
 	}
 	// Check CWD (e.g. phloem/test/acceptance) and phloem dir
-	for _, p := range []string{"./phloem", "./phloem-cli", "./phloem", "../../phloem", "/tmp/phloem-test"} {
+	for _, p := range []string{"./phloem", "./phloem", "../../phloem", "/tmp/phloem-test"} {
 		if _, err := os.Stat(p); err == nil {
 			abs, _ := filepath.Abs(p)
 			return abs, nil
@@ -1440,7 +1303,7 @@ func (tc *TestContext) runCLICommand(cmdLine string) error {
 		if dataDir := os.Getenv("PHLOEM_DATA_DIR"); dataDir != "" {
 			cmd.Env = append(cmd.Env, "PHLOEM_DATA_DIR="+dataDir)
 		} else {
-			tmpDir, _ := os.MkdirTemp("", "phloem-cli-test-*")
+			tmpDir, _ := os.MkdirTemp("", "phloem-test-*")
 			cmd.Env = append(cmd.Env, "PHLOEM_DATA_DIR="+tmpDir)
 			os.Setenv("PHLOEM_DATA_DIR", tmpDir)
 		}

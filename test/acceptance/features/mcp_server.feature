@@ -11,7 +11,7 @@ Feature: MCP Server Protocol Compliance
     When I send an initialize request to the MCP server
     Then I should receive a valid initialization response
     And the response should contain protocol version "2024-11-05"
-    And the response should contain server name "phloem-mcp"
+    And the response should contain server name "phloem"
 
   @smoke @critical @brew_gate
   Scenario: List available MCP tools
@@ -22,7 +22,6 @@ Feature: MCP Server Protocol Compliance
     And I should receive a list containing "list_memories"
     And I should receive a list containing "memory_stats"
     And I should receive a list containing "session_context"
-    And I should receive a list containing "license_status"
 
   @smoke @brew_gate
   Scenario: List available MCP resources
