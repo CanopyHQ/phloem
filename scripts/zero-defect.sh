@@ -109,7 +109,7 @@ fi
 log_section "LAYER 4: MCP PROTOCOL COMPLIANCE"
 
 echo "Testing MCP initialize..."
-MCP_INIT=$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | $TIMEOUT_CMD 5./phloem serve 2>/dev/null | head -1)
+MCP_INIT=$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | $TIMEOUT_CMD 5 ./phloem serve 2>/dev/null | head -1)
 if echo "$MCP_INIT" | grep -q "protocolVersion"; then
     log_pass "MCP initialize returns protocol version"
 else
@@ -117,7 +117,7 @@ else
 fi
 
 echo "Testing MCP tools/list..."
-MCP_TOOLS=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | $TIMEOUT_CMD 5./phloem serve 2>/dev/null | head -1)
+MCP_TOOLS=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | $TIMEOUT_CMD 5 ./phloem serve 2>/dev/null | head -1)
 if echo "$MCP_TOOLS" | grep -q "remember"; then
     log_pass "MCP tools/list returns remember tool"
 else
@@ -139,14 +139,14 @@ log_section "LAYER 5: MEMORY OPERATIONS"
 
 echo "Testing memory store and recall..."
 # This uses MCP protocol
-REMEMBER_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"Zero defect test memory","tags":["test","zero-defect"]}}}' | $TIMEOUT_CMD 10./phloem serve 2>/dev/null | head -1)
+REMEMBER_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"Zero defect test memory","tags":["test","zero-defect"]}}}' | $TIMEOUT_CMD 10 ./phloem serve 2>/dev/null | head -1)
 if echo "$REMEMBER_TEST" | grep -q "remembered\|stored"; then
     log_pass "Memory remember works"
 else
     log_fail "Memory remember failed: $REMEMBER_TEST"
 fi
 
-RECALL_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"recall","arguments":{"query":"zero defect test"}}}' | $TIMEOUT_CMD 10./phloem serve 2>/dev/null | head -1)
+RECALL_TEST=$(echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"recall","arguments":{"query":"zero defect test"}}}' | $TIMEOUT_CMD 10 ./phloem serve 2>/dev/null | head -1)
 if echo "$RECALL_TEST" | grep -q "memories\|Zero defect"; then
     log_pass "Memory recall works"
 else
@@ -164,7 +164,7 @@ export PHLOEM_DATA_DIR="$PRIVACY_DIR"
 
 # Start phloem serve in background, send a remember, then check for network sockets
 REMEMBER_REQ='{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"remember","arguments":{"content":"privacy test memory"}}}'
-echo "$REMEMBER_REQ" | $TIMEOUT_CMD 5./phloem serve >"$PRIVACY_DIR/out" 2>/dev/null &
+echo "$REMEMBER_REQ" | $TIMEOUT_CMD 5 ./phloem serve >"$PRIVACY_DIR/out" 2>/dev/null &
 PHLOEM_PID=$!
 sleep 1
 
