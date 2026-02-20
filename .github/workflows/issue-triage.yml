@@ -11,14 +11,7 @@ jobs:
   triage:
     runs-on: ubuntu-latest
     steps:
-      - name: Auto-label based on title/body
-        uses: github/issue-labeler@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/labeler.yml
-          enable-versioned-regex: 0
-
-      - name: Auto-respond to new issues
+      - name: Auto-label and respond to new issues
         uses: actions/github-script@v7
         with:
           script: |
