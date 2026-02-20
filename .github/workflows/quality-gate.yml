@@ -67,15 +67,15 @@ jobs:
 
       - name: Install sqlite3 headers (Windows)
         if: runner.os == 'Windows'
-        shell: bash
+        shell: pwsh
         run: |
           # Download SQLite amalgamation for headers
-          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3470200.zip -o sqlite.zip
-          unzip -q sqlite.zip
-          mkdir -p /c/sqlite3
-          cp sqlite-amalgamation-3470200/sqlite3.h /c/sqlite3/
-          cp sqlite-amalgamation-3470200/sqlite3ext.h /c/sqlite3/
-          echo "CGO_CFLAGS=-I/c/sqlite3" >> $GITHUB_ENV
+          Invoke-WebRequest -Uri "https://www.sqlite.org/2024/sqlite-amalgamation-3470200.zip" -OutFile sqlite.zip
+          Expand-Archive sqlite.zip -DestinationPath .
+          New-Item -ItemType Directory -Force -Path C:\sqlite3
+          Copy-Item sqlite-amalgamation-3470200\sqlite3.h C:\sqlite3\
+          Copy-Item sqlite-amalgamation-3470200\sqlite3ext.h C:\sqlite3\
+          echo "CGO_CFLAGS=-IC:\sqlite3" >> $env:GITHUB_ENV
 
       - name: Build
         run: go build -v ./...
