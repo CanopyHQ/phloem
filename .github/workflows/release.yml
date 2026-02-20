@@ -9,11 +9,47 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  # Build macOS binaries on a macOS runner
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build macOS arm64
+        run: |
+          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o dist/phloem-darwin-arm64/phloem .
+
+      - name: Build macOS amd64
+        run: |
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o dist/phloem-darwin-amd64/phloem .
+
+      - name: Package archives
+        run: |
+          cd dist/phloem-darwin-arm64 && tar czf ../phloem-darwin-arm64.tar.gz phloem && cd ../..
+          cd dist/phloem-darwin-amd64 && tar czf ../phloem-darwin-amd64.tar.gz phloem && cd ../..
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-macos
+          path: dist/*.tar.gz
+
+  # Build Linux and Windows binaries on an Ubuntu runner
+  build-linux-windows:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -29,13 +65,63 @@ jobs:
             gcc-aarch64-linux-gnu \
             gcc-mingw-w64-x86-64
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+      - name: Build Linux amd64
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o dist/phloem-linux-amd64/phloem .
+
+      - name: Build Linux arm64
+        run: |
+          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o dist/phloem-linux-arm64/phloem .
+
+      - name: Build Windows amd64
+        run: |
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o dist/phloem-windows-amd64/phloem.exe .
+
+      - name: Package archives
+        run: |
+          cd dist/phloem-linux-amd64 && tar czf ../phloem-linux-amd64.tar.gz phloem && cd ../..
+          cd dist/phloem-linux-arm64 && tar czf ../phloem-linux-arm64.tar.gz phloem && cd ../..
+          cd dist/phloem-windows-amd64 && zip ../phloem-windows-amd64.zip phloem.exe && cd ../..
+
+      - name: Upload Linux/Windows artifacts
+        uses: actions/upload-artifact@v4
         with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --clean
-          workdir: .
+          name: binaries-linux-windows
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+
+  # Create the GitHub release and attach all binaries
+  release:
+    needs: [build-macos, build-linux-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          find . -name '*.tar.gz' -o -name '*.zip' | while read f; do
+            cp "$f" ../
+          done
+          cd ..
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+      - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            *.tar.gz *.zip checksums.txt \
+            --clobber
