@@ -1,5 +1,4 @@
-# 🧠 Canopy
-
+# 🧠 Phloem
 **Your AI's memory, synchronized across every tool you use.**
 
 Canopy is a local-first memory layer that gives AI tools persistent context. Chat with Claude Code, switch to Cursor, then continue in Windsurf — your AI remembers everything. No more repeating yourself. No more lost context.
