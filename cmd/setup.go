@@ -1,0 +1,399 @@
+package cmd
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
+	"github.com/spf13/cobra"
+)
+
+var setupCmd = &cobra.Command{
+	Use:   "setup [ide]",
+	Short: "Auto-configure IDE",
+	Long: `Auto-detect and configure IDEs for Phloem.
+
+Without arguments, auto-detects installed IDEs and configures them.
+Specify an IDE to configure only that one.
+
+Examples:
+  phloem setup              # auto-detect and configure all IDEs
+  phloem setup cursor       # configure Cursor only
+  phloem setup windsurf     # configure Windsurf only
+  phloem setup claude-code  # configure Claude Code only`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runSetup()
+	},
+}
+
+func init() {
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "cursor",
+		Short: "Configure Phloem for Cursor",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupCursor()
+		},
+	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "windsurf",
+		Short: "Configure Phloem for Windsurf",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupWindsurf()
+		},
+	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "claude-code",
+		Short: "Configure Phloem for Claude Code",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupClaudeCode()
+		},
+	})
+}
+
+// runSetup auto-detects and configures IDEs
+func runSetup() error {
+	fmt.Println("🔍 Auto-detecting IDEs for Phloem setup...")
+	fmt.Println()
+
+	home, _ := os.UserHomeDir()
+	detected := 0
+
+	// Check for Cursor
+	cursorDir := filepath.Join(home, ".cursor")
+	if _, err := os.Stat(cursorDir); err == nil {
+		fmt.Println("👉 Detected Cursor")
+		if err := runSetupCursor(); err != nil {
+			fmt.Printf("   ❌ Cursor setup failed: %v\n", err)
+		} else {
+			detected++
+		}
+	}
+
+	// Check for Windsurf
+	windsurfDir := filepath.Join(home, ".windsurf")
+	if _, err := os.Stat(windsurfDir); err == nil {
+		fmt.Println("👉 Detected Windsurf")
+		if err := runSetupWindsurf(); err != nil {
+			fmt.Printf("   ❌ Windsurf setup failed: %v\n", err)
+		} else {
+			detected++
+		}
+	}
+
+	// Check for Claude Code
+	if _, err := exec.LookPath("claude"); err == nil {
+		fmt.Println("👉 Detected Claude Code")
+		if err := runSetupClaudeCode(); err != nil {
+			fmt.Printf("   ❌ Claude Code setup failed: %v\n", err)
+		} else {
+			detected++
+		}
+	}
+
+	if detected == 0 {
+		fmt.Println("⚠️  No IDEs automatically detected.")
+		fmt.Println("   You can still manually setup using:")
+		fmt.Println("   phloem setup cursor")
+		fmt.Println("   phloem setup windsurf")
+		fmt.Println("   phloem setup claude-code")
+	} else {
+		fmt.Printf("\n✅ Successfully configured %d IDE(s)!\n", detected)
+	}
+
+	return nil
+}
+
+// runSetupCursor auto-configures Cursor MCP settings
+func runSetupCursor() error {
+	fmt.Println("🔧 Setting up Phloem for Cursor...")
+	fmt.Println()
+
+	// 1. Find phloem binary path
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH. Please install via Homebrew or add to PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	// Check for cambium binary (optional but recommended)
+	cambiumPath, err := exec.LookPath("cambium")
+	hasCambium := err == nil
+	if hasCambium {
+		fmt.Printf("✓ Found cambium at: %s\n", cambiumPath)
+	} else {
+		fmt.Println("⚠️  Cambium not found (skipping MCP config for Cambium)")
+		fmt.Println("   (Install with 'brew install phloemhq/tap/phloem' to get full features)")
+	}
+
+	// 2. Locate Cursor config directory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("cannot determine home directory: %w", err)
+	}
+
+	cursorDir := filepath.Join(home, ".cursor")
+	configPath := filepath.Join(cursorDir, "mcp.json")
+
+	// 3. Create .cursor directory if it doesn't exist
+	if _, err := os.Stat(cursorDir); os.IsNotExist(err) {
+		fmt.Printf("✓ Creating Cursor config directory: %s\n", cursorDir)
+		if err := os.MkdirAll(cursorDir, 0755); err != nil {
+			return fmt.Errorf("failed to create .cursor directory: %w", err)
+		}
+	}
+
+	// 4. Read existing config or create new one
+	var config map[string]interface{}
+	if data, err := os.ReadFile(configPath); err == nil {
+		// Config exists, parse it
+		if err := json.Unmarshal(data, &config); err != nil {
+			return fmt.Errorf("failed to parse existing mcp.json: %w", err)
+		}
+		fmt.Println("✓ Found existing mcp.json")
+	} else {
+		// Create new config
+		config = make(map[string]interface{})
+		fmt.Println("✓ Creating new mcp.json")
+	}
+
+	// 5. Add or update phloem server
+	if config["mcpServers"] == nil {
+		config["mcpServers"] = make(map[string]interface{})
+	}
+
+	mcpServers := config["mcpServers"].(map[string]interface{})
+	mcpServers["phloem"] = map[string]interface{}{
+		"command": phloemPath,
+		"args":    []string{"serve"},
+	}
+
+	if hasCambium {
+		mcpServers["cambium"] = map[string]interface{}{
+			"command": cambiumPath,
+			"args":    []string{"mcp", "serve"},
+		}
+	}
+
+	// 6. Write config back
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write mcp.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated mcp.json: %s\n", configPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Cursor!")
+	fmt.Println()
+	fmt.Println("Next steps:")
+	fmt.Println("  1. Restart Cursor")
+	fmt.Println("  2. Open a file and start coding")
+	fmt.Println("  3. Phloem will automatically remember your conversations")
+	fmt.Println()
+	fmt.Println("Commands:")
+	fmt.Println("  phloem status   - View memory statistics")
+	fmt.Println("  phloem help     - See all commands")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	return nil
+}
+
+// runSetupClaudeCode registers Phloem as an MCP server in Claude Code
+func runSetupClaudeCode() error {
+	fmt.Println("🔧 Setting up Phloem for Claude Code...")
+	fmt.Println()
+
+	// 1. Find claude binary
+	claudePath, err := exec.LookPath("claude")
+	if err != nil {
+		return fmt.Errorf("claude binary not found in PATH. Install Claude Code first")
+	}
+	fmt.Printf("✓ Found claude at: %s\n", claudePath)
+
+	// 2. Find phloem binary path
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH. Please install via Homebrew or add to PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	// 3. Check if phloem is already registered
+	fmt.Print("✓ Checking existing MCP registrations... ")
+	listCmd := exec.Command(claudePath, "mcp", "list")
+	listOutput, err := listCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("⚠️  Could not list MCP servers (continuing)")
+	} else if strings.Contains(string(listOutput), "phloem") {
+		fmt.Println("already registered")
+		fmt.Println()
+		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Println("✅ Phloem is already configured for Claude Code!")
+		fmt.Println()
+		fmt.Println("To re-register, first remove:")
+		fmt.Println("  claude mcp remove phloem")
+		fmt.Println("Then run:")
+		fmt.Println("  phloem setup claude-code")
+		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		return nil
+	} else {
+		fmt.Println("not yet registered")
+	}
+
+	// 4. Determine PHLOEM_DATA_DIR
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("cannot determine home directory: %w", err)
+	}
+	dataDir := filepath.Join(home, ".phloem")
+
+	// 5. Register phloem MCP server with Claude Code
+	fmt.Print("✓ Registering phloem MCP server... ")
+	addCmd := exec.Command(claudePath, "mcp", "add",
+		"-e", "PHLOEM_DATA_DIR="+dataDir,
+		"--scope", "user",
+		"phloem",
+		"--",
+		phloemPath, "serve",
+	)
+	addOutput, err := addCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to register MCP server: %w\nOutput: %s", err, string(addOutput))
+	}
+	fmt.Println("done")
+
+	// 6. Verify registration
+	fmt.Print("✓ Verifying registration... ")
+	verifyCmd := exec.Command(claudePath, "mcp", "list")
+	verifyOutput, err := verifyCmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("⚠️  Could not verify (may still be registered)")
+	} else if strings.Contains(string(verifyOutput), "phloem") {
+		fmt.Println("confirmed")
+	} else {
+		return fmt.Errorf("phloem not found in MCP list after registration")
+	}
+
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Claude Code!")
+	fmt.Println()
+	fmt.Println("Next steps:")
+	fmt.Println("  1. Start a new Claude Code session")
+	fmt.Println("  2. MCP server will auto-start on first tool use")
+	fmt.Println("  3. Use 'remember' tool to store memories")
+	fmt.Println("  4. Use 'recall' tool to search memories")
+	fmt.Println()
+	fmt.Println("Commands:")
+	fmt.Println("  phloem status   - View memory statistics")
+	fmt.Println("  phloem help     - See all commands")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	return nil
+}
+
+// runSetupWindsurf auto-configures Windsurf MCP settings
+func runSetupWindsurf() error {
+	fmt.Println("🔧 Setting up Phloem for Windsurf...")
+	fmt.Println()
+
+	// 1. Find phloem binary path
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH. Please install via Homebrew or add to PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	// Check for cambium binary (optional but recommended)
+	cambiumPath, err := exec.LookPath("cambium")
+	hasCambium := err == nil
+	if hasCambium {
+		fmt.Printf("✓ Found cambium at: %s\n", cambiumPath)
+	} else {
+		fmt.Println("⚠️  Cambium not found (skipping MCP config for Cambium)")
+	}
+
+	// 2. Locate Windsurf config directory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("cannot determine home directory: %w", err)
+	}
+
+	windsurfDir := filepath.Join(home, ".windsurf")
+	configPath := filepath.Join(windsurfDir, "mcp_config.json")
+
+	// 3. Create .windsurf directory if it doesn't exist
+	if _, err := os.Stat(windsurfDir); os.IsNotExist(err) {
+		fmt.Printf("✓ Creating Windsurf config directory: %s\n", windsurfDir)
+		if err := os.MkdirAll(windsurfDir, 0755); err != nil {
+			return fmt.Errorf("failed to create .windsurf directory: %w", err)
+		}
+	}
+
+	// 4. Read existing config or create new one
+	var config map[string]interface{}
+	if data, err := os.ReadFile(configPath); err == nil {
+		// Config exists, parse it
+		if err := json.Unmarshal(data, &config); err != nil {
+			return fmt.Errorf("failed to parse existing mcp_config.json: %w", err)
+		}
+		fmt.Println("✓ Found existing mcp_config.json")
+	} else {
+		// Create new config
+		config = make(map[string]interface{})
+		fmt.Println("✓ Creating new mcp_config.json")
+	}
+
+	// 5. Add or update phloem server
+	if config["mcpServers"] == nil {
+		config["mcpServers"] = make(map[string]interface{})
+	}
+
+	mcpServers := config["mcpServers"].(map[string]interface{})
+	mcpServers["phloem"] = map[string]interface{}{
+		"command": phloemPath,
+		"args":    []string{"serve"},
+	}
+
+	if hasCambium {
+		mcpServers["cambium"] = map[string]interface{}{
+			"command": cambiumPath,
+			"args":    []string{"mcp", "serve"},
+		}
+	}
+
+	// 6. Write config back
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write mcp_config.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated mcp_config.json: %s\n", configPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Windsurf!")
+	fmt.Println()
+	fmt.Println("Next steps:")
+	fmt.Println("  1. Restart Windsurf")
+	fmt.Println("  2. Open a file and start coding")
+	fmt.Println("  3. Phloem will automatically remember your conversations")
+	fmt.Println()
+	fmt.Println("Commands:")
+	fmt.Println("  phloem status   - View memory statistics")
+	fmt.Println("  phloem help     - See all commands")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	return nil
+}

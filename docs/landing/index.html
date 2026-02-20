@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phloem - Your AI Finally Remembers</title>
+    <meta name="description" content="Escape the AI data silos. Phloem captures your conversations from ChatGPT, Claude, and Gemini - stored locally, owned by you.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #888;
+            --accent: #00d4aa;
+            --accent-dim: #00a885;
+            --border: #2a2a2a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(0, 212, 170, 0.15) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-dim);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+        
+        .hero-note {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Features */
+        .features {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--accent);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 6rem 2rem;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .step {
+            text-align: center;
+        }
+        
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .step h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .step p {
+            color: var(--text-secondary);
+        }
+        
+        /* Privacy */
+        .privacy {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+        
+        .privacy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .privacy-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .privacy-icon {
+            font-size: 1.5rem;
+        }
+        
+        /* Code Block */
+        .code-section {
+            padding: 6rem 2rem;
+        }
+        
+        .code-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            max-width: 700px;
+            margin: 2rem auto 0;
+        }
+        
+        .code-block .comment {
+            color: var(--text-secondary);
+        }
+        
+        .code-block .command {
+            color: var(--accent);
+        }
+        
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        
+        .copyright {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Pricing */
+        .pricing {
+            padding: 6rem 2rem;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 700px;
+            margin: 2rem auto 0;
+        }
+        
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+        
+        .pricing-card .badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pricing-card .price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+        
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+        
+        .pricing-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .pricing-note {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+            font-style: italic;
+        }
+        
+        /* Transparency */
+        .transparency {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: -2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .transparency-note {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 4rem 1.5rem;
+            }
+            
+            .cta-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="logo">🧠</div>
+        <h1>Your AI Finally Remembers</h1>
+        <p class="tagline">
+            Escape the AI data silos. Capture your conversations from ChatGPT, Claude, and Gemini — stored locally, owned by you.
+        </p>
+        <div class="cta-group">
+            <a href="#download" class="btn btn-primary">
+                <span>⬇️</span> Download for Mac
+            </a>
+            <a href="https://github.com/CanopyHQ/phloem" class="btn btn-secondary">
+                <span>📦</span> View on GitHub
+            </a>
+        </div>
+        <p class="hero-note">Free. No account required. No tracking.</p>
+    </section>
+    
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Phloem?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy First</h3>
+                    <p>All data stays on your device. No cloud required. No account needed. No tracking, ever.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Cross-Platform AI</h3>
+                    <p>Capture conversations from ChatGPT, Claude, and Gemini. One memory layer across all your AI tools.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Instant Search</h3>
+                    <p>Find any conversation instantly with powerful semantic search. Press ⌘⇧P anywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📤</div>
+                    <h3>Your Data, Portable</h3>
+                    <p>Export everything to JSON or Markdown anytime. No vendor lock-in. Take your memories anywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightweight</h3>
+                    <p>Menu bar app that stays out of your way. Uses minimal resources. Works offline.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3>Open Source</h3>
+                    <p>Audit the code yourself. Contribute improvements. Built by developers, for developers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Install Phloem</h3>
+                    <p>Download the Mac app or install via Homebrew</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Add the Extension</h3>
+                    <p>Install the browser extension for Chrome</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Use AI Normally</h3>
+                    <p>Chat with ChatGPT, Claude, or Gemini as usual</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Search Anytime</h3>
+                    <p>Press ⌘⇧P to find any past conversation</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Privacy -->
+    <section class="privacy">
+        <div class="container">
+            <h2 class="section-title">Privacy Commitment</h2>
+            <div class="privacy-grid">
+                <div class="privacy-item">
+                    <span class="privacy-icon">✅</span>
+                    <span>All data stored locally</span>
+                </div>
+                <div class="privacy-item">
+                    <span class="privacy-icon">✅</span>
+                    <span>No account required</span>
+                </div>
+                <div class="privacy-item">
+                    <span class="privacy-icon">✅</span>
+                    <span>No telemetry or analytics</span>
+                </div>
+                <div class="privacy-item">
+                    <span class="privacy-icon">✅</span>
+                    <span>Export anytime</span>
+                </div>
+                <div class="privacy-item">
+                    <span class="privacy-icon">❌</span>
+                    <span>No data sent to servers</span>
+                </div>
+                <div class="privacy-item">
+                    <span class="privacy-icon">❌</span>
+                    <span>No ads, ever</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple Pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">$0<span>/forever</span></div>
+                    <ul class="pricing-features">
+                        <li>✅ 14-day memory window</li>
+                        <li>✅ 1,000 memories</li>
+                        <li>✅ Semantic search</li>
+                        <li>✅ All AI platforms</li>
+                        <li>✅ Local storage</li>
+                        <li>❌ Cloud sync</li>
+                    </ul>
+                    <a href="#download" class="btn btn-secondary">Get Started Free</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="badge">Most Popular</div>
+                    <h3>Pro</h3>
+                    <div class="price">$9<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>✅ <strong>Unlimited</strong> memory window</li>
+                        <li>✅ <strong>Unlimited</strong> memories</li>
+                        <li>✅ Semantic search</li>
+                        <li>✅ All AI platforms</li>
+                        <li>✅ Local storage</li>
+                        <li>✅ Cloud sync & backup</li>
+                        <li>✅ Priority support</li>
+                    </ul>
+                    <a href="https://buy.stripe.com/REPLACE_WITH_STRIPE_LINK" class="btn btn-primary">Upgrade to Pro</a>
+                </div>
+            </div>
+            <p class="pricing-note">Your older memories are waiting. Upgrade anytime to unlock them.</p>
+        </div>
+    </section>
+    
+    <!-- Transparency -->
+    <section class="transparency">
+        <div class="container">
+            <h2 class="section-title">Radical Transparency</h2>
+            <p class="section-subtitle">See exactly what telemetry we collect. No secrets.</p>
+            <div class="code-block">
+                <div class="comment"># See what Phloem sends (spoiler: just operational metrics)</div>
+                <div class="command">phloem telemetry show</div>
+                <br>
+                <div class="comment"># Export for your security team to audit</div>
+                <div class="command">phloem telemetry export > audit.json</div>
+                <br>
+                <div class="comment"># Don't trust us? Disable it entirely</div>
+                <div class="command">phloem telemetry disable</div>
+            </div>
+            <p class="transparency-note">We send: event types, timestamps, counts, hashes.<br>We NEVER send: content, PII, secrets, queries.</p>
+        </div>
+    </section>
+
+    <!-- Download -->
+    <section class="code-section" id="download">
+        <div class="container">
+            <h2 class="section-title">Get Started</h2>
+            <div class="code-block">
+                <div class="comment"># Install via Homebrew</div>
+                <div class="command">brew install canopyhq/tap/phloem</div>
+                <br>
+                <div class="comment"># Or download directly</div>
+                <div class="command">curl -sSL https://phloem.canopyhq.io/install.sh | bash</div>
+                <br>
+                <div class="comment"># Install browser extension</div>
+                <div class="command">phloem install-extension</div>
+            </div>
+            <div class="cta-group" style="margin-top: 2rem;">
+                <a href="https://chrome.google.com/webstore/detail/phloem" class="btn btn-primary">
+                    <span>🌐</span> Chrome Extension
+                </a>
+                <a href="https://github.com/CanopyHQ/phloem/releases" class="btn btn-secondary">
+                    <span>📦</span> All Downloads
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/CanopyHQ/phloem">GitHub</a>
+            <a href="PRIVACY.html">Privacy Policy</a>
+            <a href="TERMS.html">Terms of Service</a>
+            <a href="mailto:support@canopyhq.io">Support</a>
+        </div>
+        <p class="copyright">© 2026 CanopyHQ. All rights reserved.</p>
+    </footer>
+</body>
+</html>

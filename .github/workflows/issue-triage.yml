@@ -1,0 +1,118 @@
+name: Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-label based on title/body
+        uses: github/issue-labeler@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+          enable-versioned-regex: 0
+
+      - name: Auto-respond to new issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const body = (issue.body || '').toLowerCase();
+            
+            // Detect issue type
+            let response = '';
+            let labels = [];
+            
+            // Bug reports
+            if (title.includes('bug') || title.includes('error') || title.includes('crash') || title.includes('broken')) {
+              labels.push('bug');
+              response = `Thanks for reporting this issue! 🐛
+
+**What happens next:**
+1. I'll review this within 48 hours
+2. If I need more info, I'll ask
+3. Once confirmed, it goes into the fix queue
+
+**While you wait:**
+- Check if there's a workaround in [the docs](https://canopyhq.io/docs/phloem)
+- Try \`phloem --version\` to confirm you're on the latest version
+
+I'll get back to you soon!`;
+            }
+            
+            // Feature requests
+            else if (title.includes('feature') || title.includes('request') || title.includes('suggestion') || title.includes('add')) {
+              labels.push('enhancement');
+              response = `Thanks for the feature suggestion! 💡
+
+**What happens next:**
+1. I'll review this within 48 hours
+2. If it aligns with the roadmap, I'll add it to planning
+3. Popular requests get prioritized
+
+**Note:** Cambium is maintained by one person, so I focus on high-impact features. The best way to increase priority is to 👍 react to issues you care about!`;
+            }
+            
+            // Questions
+            else if (title.includes('how') || title.includes('?') || title.includes('help') || title.includes('question')) {
+              labels.push('question');
+              response = `Thanks for your question! ❓
+
+**Quick resources:**
+- [Documentation](https://canopyhq.io/docs/phloem)
+- [Getting Started Guide](https://canopyhq.io/docs/phloem/getting-started)
+- [FAQ](https://canopyhq.io/docs/phloem/faq)
+
+If the docs don't answer your question, I'll respond within 48 hours!`;
+            }
+            
+            // Default response
+            else {
+              labels.push('needs-triage');
+              response = `Thanks for opening this issue! 👋
+
+I'll review it within 48 hours and respond with next steps.
+
+**Helpful info to include (if not already):**
+- Cambium version (\`phloem --version\`)
+- OS and version
+- Steps to reproduce (if applicable)`;
+            }
+            
+            // Add labels
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: response
+            });
+
+      - name: Notify on critical issues
+        if: contains(github.event.issue.title, 'critical') || contains(github.event.issue.title, 'urgent') || contains(github.event.issue.title, 'security')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Add priority label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: ['priority-high']
+            });

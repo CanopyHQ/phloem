@@ -1,0 +1,139 @@
+# Quality Gate Workflow for Phloem
+# Enforces quality standards before merge
+
+name: Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # ==========================================================================
+  # Unit Tests
+  # ==========================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run unit tests
+        run: |
+          go test ./... -v -race -coverprofile=coverage.out -covermode=atomic
+          
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: ${COVERAGE}%"
+          
+          # Per docs/TEST_STANDARDS.md: Phloem 70%
+          THRESHOLD=70
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
+            exit 1
+          fi
+          echo "✅ Coverage ${COVERAGE}% meets threshold ${THRESHOLD}%"
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          fail_ci_if_error: false
+
+  # ==========================================================================
+  # Build Verification
+  # ==========================================================================
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go-version: ['1.21', '1.22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Verify MCP server starts
+        run: |
+          go build -o phloem-test ./...
+          # MCP server expects stdin, just verify it compiles and has help
+          ./phloem-test --help || true
+
+  # ==========================================================================
+  # Lint
+  # ==========================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --timeout=5m
+
+  # ==========================================================================
+  # MCP Protocol Tests
+  # ==========================================================================
+  mcp-protocol:
+    name: MCP Protocol Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build Phloem
+        run: go build -o phloem ./...
+
+      - name: Test MCP initialize
+        run: |
+          echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | head -1 | jq -e '.result.protocolVersion'
+
+      - name: Test tools/list
+        run: |
+          echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
+          {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | timeout 5 ./phloem serve 2>/dev/null | tail -1 | jq -e '.result.tools | length == 5'
+
+  # ==========================================================================
+  # Quality Gate Summary
+  # ==========================================================================
+  quality-gate:
+    name: Quality Gate
+    needs: [unit-tests, build, lint, mcp-protocol]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All checks passed
+        run: |
+          echo "✅ All quality gate checks passed!"
+          echo ""
+          echo "Summary:"
+          echo "  - Unit tests: ✅"
+          echo "  - Build: ✅"
+          echo "  - Lint: ✅"
+          echo "  - MCP Protocol: ✅"

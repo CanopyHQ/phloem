@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Phloem</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #888;
+            --accent: #00d4aa;
+            --border: #2a2a2a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .updated {
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        p, ul {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        ul {
+            padding-left: 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            color: var(--text-primary);
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .highlight {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Phloem</a>
+        
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: January 15, 2026</p>
+        
+        <div class="highlight">
+            <strong>TL;DR:</strong> Your conversations stay on your device. We don't see them, store them, or sell them. Period.
+        </div>
+        
+        <h2>What Phloem Does</h2>
+        <p>Phloem captures your AI conversations from ChatGPT, Claude, and Gemini and stores them <strong>locally on your device</strong>. This allows you to search and recall past conversations without relying on each platform's limited history.</p>
+        
+        <h2>Data We DO NOT Collect</h2>
+        <ul>
+            <li><strong>Your conversations</strong> - Never sent to our servers</li>
+            <li><strong>Your prompts or AI responses</strong> - Stay on your device</li>
+            <li><strong>Personal information</strong> - We don't ask for it</li>
+            <li><strong>API keys</strong> - Never transmitted</li>
+            <li><strong>File contents</strong> - Not accessed</li>
+            <li><strong>Browsing history</strong> - Not tracked</li>
+        </ul>
+        
+        <h2>Data We MAY Collect (With Your Consent)</h2>
+        <p>If you opt-in to telemetry, we collect <strong>anonymous operational metrics only</strong>:</p>
+        <ul>
+            <li>Event types (e.g., "memory_saved", "search_performed")</li>
+            <li>Timestamps</li>
+            <li>Aggregate counts</li>
+            <li>Error types (not content)</li>
+            <li>App version</li>
+        </ul>
+        
+        <p>We <strong>NEVER</strong> collect content, PII, or anything that could identify you or your conversations.</p>
+        
+        <div class="highlight">
+            <strong>You control telemetry:</strong><br>
+            <code>phloem telemetry show</code> - See exactly what we collect<br>
+            <code>phloem telemetry disable</code> - Turn it off completely
+        </div>
+        
+        <h2>Data Storage</h2>
+        <ul>
+            <li><strong>Free tier:</strong> All data stored locally in <code>~/.phloem/</code></li>
+            <li><strong>Pro tier:</strong> Optional cloud sync (encrypted, you control the key)</li>
+        </ul>
+        
+        <h2>Browser Extension</h2>
+        <p>The Phloem browser extension:</p>
+        <ul>
+            <li>Only activates on ChatGPT, Claude, and Gemini domains</li>
+            <li>Sends conversation data to your local Phloem app via native messaging</li>
+            <li>Does NOT send data to any external server</li>
+            <li>Does NOT track your browsing</li>
+        </ul>
+        
+        <h2>Third-Party Services</h2>
+        <ul>
+            <li><strong>Stripe:</strong> Processes payments for Pro subscriptions. We don't store your payment details.</li>
+            <li><strong>GitHub:</strong> Hosts our open-source code for transparency.</li>
+        </ul>
+        
+        <h2>Data Deletion</h2>
+        <p>Your data, your choice:</p>
+        <ul>
+            <li><code>phloem export</code> - Export all your data</li>
+            <li><code>phloem clear</code> - Delete all local data</li>
+            <li>Uninstall the app - All data is removed</li>
+        </ul>
+        
+        <h2>Open Source</h2>
+        <p>Phloem is open source. You can <a href="https://github.com/CanopyHQ/phloem">audit the code yourself</a> to verify our privacy claims.</p>
+        
+        <h2>Changes to This Policy</h2>
+        <p>We'll notify you of significant changes via the app and update this page.</p>
+        
+        <h2>Contact</h2>
+        <p>Questions? <a href="mailto:privacy@canopyhq.io">privacy@canopyhq.io</a></p>
+        
+        <p style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+            © 2026 CanopyHQ. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>

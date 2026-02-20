@@ -1,0 +1,42 @@
+# Binary
+phloem-mcp
+phloem-mcp.exe
+phloem
+phloem-intel
+phloem-apple-silicon
+
+# Test coverage
+coverage.out
+coverage.html
+coverage_*.out
+cov_*.out
+*.out
+/arbor.html
+/audit.html
+/guardian.html
+/unified.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+
+# Data directory (local only)
+.phloem/
+
+# Build artifacts
+macos/.build/
+*.dmg
+*.zip
+dist/
+
+# Test files
+test-*.sh

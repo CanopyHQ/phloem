@@ -1,0 +1,30 @@
+# Auto-labeling rules for issues
+# Matches against issue title and body
+
+bug:
+  - pattern: '(bug|error|crash|broken|fail|exception)'
+    where: any
+
+enhancement:
+  - pattern: '(feature|request|suggestion|add|improve|enhancement)'
+    where: any
+
+question:
+  - pattern: '(how|help|question|\?|documentation|docs)'
+    where: any
+
+installation:
+  - pattern: '(install|brew|homebrew|setup|configure)'
+    where: any
+
+routing:
+  - pattern: '(route|routing|provider|model|fallback)'
+    where: any
+
+cost:
+  - pattern: '(cost|budget|spend|price|billing)'
+    where: any
+
+performance:
+  - pattern: '(slow|performance|latency|speed|memory|cpu)'
+    where: any

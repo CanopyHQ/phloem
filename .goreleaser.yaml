@@ -1,0 +1,102 @@
+version: 2
+
+project_name: phloem
+
+builds:
+  - id: phloem-darwin-arm64
+    binary: phloem
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: phloem-darwin-amd64
+    binary: phloem
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  # Linux builds require cross-compilation toolchain for CGO (sqlite-vec).
+  # Uncomment when CI has a linux builder or cross-compile is configured.
+  # - id: phloem-linux-amd64
+  #   binary: phloem
+  #   main: ./main.go
+  #   env:
+  #     - CGO_ENABLED=1
+  #   goos:
+  #     - linux
+  #   goarch:
+  #     - amd64
+  #   ldflags:
+  #     - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - id: phloem-archive
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    formats:
+      - tar.gz
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{incpatch .Version}}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+release:
+  github:
+    owner: CanopyHQ
+    name: phloem
+  draft: false
+  prerelease: auto
+
+brews:
+  - name: phloem
+    repository:
+      owner: CanopyHQ
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: Phloem Bot
+      email: bot@canopyhq.io
+    directory: Formula
+    homepage: "https://github.com/CanopyHQ/phloem"
+    description: "Local-first AI memory with causal graphs"
+    license: "Apache-2.0"
+    test: |
+      assert_match "protocolVersion", shell_output("echo '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}' | #{bin}/phloem serve 2>/dev/null | head -1")
+    caveats: |
+      Phloem is installed!
+
+      Quick Setup for Cursor:
+        Add to ~/.cursor/mcp.json:
+        {
+          "mcpServers": {
+            "phloem": {
+              "command": "#{opt_bin}/phloem",
+              "args": ["serve"]
+            }
+          }
+        }
+
+      Documentation: https://github.com/CanopyHQ/phloem
