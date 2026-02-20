@@ -39,11 +39,19 @@ jobs:
           cd dist/phloem-darwin-arm64 && tar czf ../phloem-darwin-arm64.tar.gz phloem && cd ../..
           cd dist/phloem-darwin-amd64 && tar czf ../phloem-darwin-amd64.tar.gz phloem && cd ../..
 
+      - name: Build MCPB bundles
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ./scripts/build-mcpb.sh "$VERSION" dist/phloem-darwin-arm64/phloem dist/phloem-darwin-arm64.mcpb
+          ./scripts/build-mcpb.sh "$VERSION" dist/phloem-darwin-amd64/phloem dist/phloem-darwin-amd64.mcpb
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries-macos
-          path: dist/*.tar.gz
+          path: |
+            dist/*.tar.gz
+            dist/*.mcpb
 
   # Build Linux and Windows binaries on an Ubuntu runner
   build-linux-windows:
@@ -118,11 +126,11 @@ jobs:
       - name: Generate checksums
         run: |
           cd artifacts
-          find . -name '*.tar.gz' -o -name '*.zip' | while read f; do
+          find . -name '*.tar.gz' -o -name '*.zip' -o -name '*.mcpb' | while read f; do
             cp "$f" ../
           done
           cd ..
-          sha256sum *.tar.gz *.zip > checksums.txt
+          sha256sum *.tar.gz *.zip *.mcpb > checksums.txt
 
       - name: Create release
         env:
@@ -130,10 +138,10 @@ jobs:
         run: |
           # Create release if it doesn't exist, then upload assets
           gh release create "$GITHUB_REF_NAME" \
-            *.tar.gz *.zip checksums.txt \
+            *.tar.gz *.zip *.mcpb checksums.txt \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
             2>/dev/null \
           || gh release upload "$GITHUB_REF_NAME" \
-            *.tar.gz *.zip checksums.txt \
+            *.tar.gz *.zip *.mcpb checksums.txt \
             --clobber

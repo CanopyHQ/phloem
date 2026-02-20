@@ -23,6 +23,39 @@ jobs:
       - name: Install MCP Publisher
         run: go install github.com/modelcontextprotocol/registry/cmd/publisher@latest
 
+      - name: Get release version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION=$(gh release view --json tagName -q .tagName)
+          fi
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download MCPB and compute SHA256
+        id: mcpb
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release download "$TAG" --pattern "phloem-darwin-arm64.mcpb" --output phloem.mcpb
+          SHA256=$(sha256sum phloem.mcpb | awk '{print $1}')
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+
+          # Update server.json with correct version, URL, and SHA256
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg v "$VERSION" --arg tag "$TAG" --arg sha "$SHA256" '
+            .version = $v |
+            .packages[0].identifier = "https://github.com/CanopyHQ/phloem/releases/download/\($tag)/phloem-darwin-arm64.mcpb" |
+            .packages[0].fileSha256 = $sha
+          ' server.json > server.json.tmp && mv server.json.tmp server.json
+
+          cat server.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Login via OIDC
         run: publisher login github-oidc
 

@@ -9,16 +9,12 @@
   "version": "0.1.1",
   "packages": [
     {
-      "registryType": "other",
-      "identifier": "canopyhq/tap/phloem",
-      "version": "0.1.1",
-      "runtime": {
-        "type": "binary"
-      },
+      "registryType": "mcpb",
+      "identifier": "https://github.com/CanopyHQ/phloem/releases/download/v0.1.1/phloem-darwin-arm64.mcpb",
+      "fileSha256": "PLACEHOLDER",
       "transport": {
         "type": "stdio"
-      },
-      "environmentVariables": []
+      }
     }
   ],
   "tools": [
