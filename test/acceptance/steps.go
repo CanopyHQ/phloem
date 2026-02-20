@@ -15,6 +15,7 @@ import (
 
 	"github.com/CanopyHQ/phloem/internal/graft"
 	"github.com/CanopyHQ/phloem/internal/memory"
+	"github.com/cucumber/godog"
 )
 
 var testServerCmd *exec.Cmd
@@ -509,6 +510,61 @@ func (tc *TestContext) callMCPTool(tool string) error {
 	// Check for error first
 	if errField, ok := resp["error"].(map[string]interface{}); ok {
 		// This is an error response - store it for error checking
+		tc.lastResponse = map[string]interface{}{
+			"isError": true,
+			"error":   errField,
+		}
+		return nil
+	}
+
+	if result, ok := resp["result"].(map[string]interface{}); ok {
+		tc.lastResponse = result
+	} else {
+		return fmt.Errorf("invalid response format")
+	}
+
+	return nil
+}
+
+func (tc *TestContext) callMCPToolWithJSON(tool string, jsonStr *godog.DocString) error {
+	if err := setupTestServer(); err != nil {
+		return err
+	}
+
+	// Replace USE_STORED placeholder with actual stored memory ID
+	content := jsonStr.Content
+	if tc.storedMemoryID != "" {
+		content = strings.ReplaceAll(content, "USE_STORED", tc.storedMemoryID)
+	}
+
+	var args map[string]interface{}
+	if err := json.Unmarshal([]byte(content), &args); err != nil {
+		return fmt.Errorf("invalid JSON arguments: %w", err)
+	}
+
+	req := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "tools/call",
+		"params": map[string]interface{}{
+			"name":      tool,
+			"arguments": args,
+		},
+	}
+
+	reqJSON, _ := json.Marshal(req)
+	reqJSON = append(reqJSON, '\n')
+
+	if _, err := testServerStdin.Write(reqJSON); err != nil {
+		return err
+	}
+
+	resp, err := readServerResponse()
+	if err != nil {
+		return err
+	}
+
+	if errField, ok := resp["error"].(map[string]interface{}); ok {
 		tc.lastResponse = map[string]interface{}{
 			"isError": true,
 			"error":   errField,

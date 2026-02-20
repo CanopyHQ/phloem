@@ -92,6 +92,27 @@ func TestCriticalFeatures(t *testing.T) {
 	}
 }
 
+// TestSurfaceFeatures runs the full surface area test
+func TestSurfaceFeatures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping acceptance tests in short mode")
+	}
+
+	suite := godog.TestSuite{
+		ScenarioInitializer: InitializeScenario,
+		Options: &godog.Options{
+			Format:   "pretty",
+			Paths:    []string{"features"},
+			TestingT: t,
+			Tags:     "@surface&&~@wip",
+		},
+	}
+
+	if suite.Run() != 0 {
+		t.Fatal("surface area tests failed")
+	}
+}
+
 // InitializeScenario sets up step definitions
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	tc := &TestContext{
@@ -109,6 +130,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I call the MCP tool "([^"]*)"$`, tc.callMCPTool)
 	ctx.Step(`^I call the MCP tool "([^"]*)" with content "([^"]*)"$`, tc.callMCPToolWithContent)
 	ctx.Step(`^I call the MCP tool "([^"]*)" with query "([^"]*)"$`, tc.callMCPToolWithQuery)
+	ctx.Step(`^I call the MCP tool "([^"]*)" with arguments:$`, tc.callMCPToolWithJSON)
 	ctx.Step(`^I should receive a success response$`, tc.checkSuccessResponse)
 	ctx.Step(`^I should receive an error response$`, tc.checkErrorResponse)
 

@@ -1,6 +1,6 @@
 # Phloem MCP Makefile
 
-.PHONY: build install clean test run help quality check pre-commit preflight preflight-release verify-privacy verify-install ci-local
+.PHONY: build install clean test run help quality check pre-commit preflight preflight-release verify-privacy verify-install ci-local surface-test
 
 # Binary name (phloem for monorepo/CI; matches release-gate cp phloem/phloem)
 BINARY=phloem
@@ -204,6 +204,11 @@ verify-privacy: build
 	@echo "Running privacy verification..."
 	@if [ -f scripts/verify-privacy.sh ]; then bash scripts/verify-privacy.sh; else echo "verify-privacy.sh not found"; exit 1; fi
 
+## surface-test: Post-binary E2E surface area test (every CLI command + MCP tool)
+surface-test: build
+	@echo "Running surface area test..."
+	@./scripts/surface-test.sh ./$(BINARY)
+
 ## verify-install: Verify IDE setup commands work correctly
 verify-install: build
 	@echo "Running install verification..."
@@ -292,6 +297,7 @@ help:
 	@echo "  make zero-defect   MANDATORY before release"
 	@echo "  make verify-privacy Verify no network connections"
 	@echo "  make verify-install Verify IDE setup commands"
+	@echo "  make surface-test  E2E surface area test (all commands + tools)"
 	@echo "  make ci-local      Mirror GitHub Actions CI locally"
 	@echo ""
 	@echo "Setup:"
