@@ -1,0 +1,40 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.CanopyHQ/phloem",
+  "description": "Local-first AI memory with causal graphs. Fully offline, zero config, your data stays local.",
+  "repository": {
+    "url": "https://github.com/CanopyHQ/phloem",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "other",
+      "identifier": "canopyhq/tap/phloem",
+      "version": "0.1.1",
+      "runtime": {
+        "type": "binary"
+      },
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": []
+    }
+  ],
+  "tools": [
+    {"name": "remember", "description": "Store a memory for later recall"},
+    {"name": "recall", "description": "Search memories by semantic similarity"},
+    {"name": "forget", "description": "Delete a specific memory by ID"},
+    {"name": "list_memories", "description": "List recent memories, optionally filtered by tags"},
+    {"name": "memory_stats", "description": "Get statistics about the memory store"},
+    {"name": "session_context", "description": "Load session context with recent memories and key decisions"},
+    {"name": "add_citation", "description": "Add a citation linking a memory to a code location"},
+    {"name": "verify_citation", "description": "Verify if a citation is still valid"},
+    {"name": "get_citations", "description": "Get all citations for a memory"},
+    {"name": "verify_memory", "description": "Verify a memory by checking all its citations"},
+    {"name": "causal_query", "description": "Query causal graph for neighbors or affected memories"},
+    {"name": "compose", "description": "Compose two recall queries with merged results"},
+    {"name": "prefetch", "description": "Get memory suggestions to preload for current context"},
+    {"name": "prefetch_suggest", "description": "Suggest memories to preload given current context"}
+  ]
+}
