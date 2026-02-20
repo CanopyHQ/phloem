@@ -97,7 +97,7 @@
         <a href="/" class="back-link">← Back to Phloem</a>
         
         <h1>Privacy Policy</h1>
-        <p class="updated">Last updated: January 15, 2026</p>
+        <p class="updated">Last updated: February 20, 2026</p>
         
         <div class="highlight">
             <strong>TL;DR:</strong> Your conversations stay on your device. We don't see them, store them, or sell them. Period.
@@ -116,27 +116,21 @@
             <li><strong>Browsing history</strong> - Not tracked</li>
         </ul>
         
-        <h2>Data We MAY Collect (With Your Consent)</h2>
-        <p>If you opt-in to telemetry, we collect <strong>anonymous operational metrics only</strong>:</p>
-        <ul>
-            <li>Event types (e.g., "memory_saved", "search_performed")</li>
-            <li>Timestamps</li>
-            <li>Aggregate counts</li>
-            <li>Error types (not content)</li>
-            <li>App version</li>
-        </ul>
-        
-        <p>We <strong>NEVER</strong> collect content, PII, or anything that could identify you or your conversations.</p>
-        
+        <h2>No Telemetry. No Network Connections. Period.</h2>
+        <p>Phloem makes <strong>zero network connections</strong>. There is no telemetry, no analytics, no crash reporting, no install pings. The MCP server communicates with your IDE via stdio (local pipes, not network).</p>
+
         <div class="highlight">
-            <strong>You control telemetry:</strong><br>
-            <code>phloem telemetry show</code> - See exactly what we collect<br>
-            <code>phloem telemetry disable</code> - Turn it off completely
+            <strong>Verify it yourself:</strong><br>
+            <code>phloem audit</code> - Inspect your local data<br>
+            <code>sudo lsof -i -P | grep phloem</code> - Should show nothing<br>
+            <code>make verify-privacy</code> - Automated verification
         </div>
-        
+
         <h2>Data Storage</h2>
         <ul>
-            <li><strong>Free tier:</strong> All data stored locally in <code>~/.phloem/</code></li>
+            <li><strong>Location:</strong> <code>~/.phloem/memories.db</code> (SQLite with sqlite-vec)</li>
+            <li><strong>Contents:</strong> Your memories, embeddings, citations, causal graph edges</li>
+            <li><strong>No accounts, no registration, no personal information collected</strong></li>
         </ul>
 
         <h2>Third-Party Services</h2>
