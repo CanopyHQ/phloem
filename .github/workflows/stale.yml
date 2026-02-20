@@ -2,8 +2,7 @@ name: Stale Issues
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # Run daily at 9 AM UTC
-  workflow_dispatch:
+    - cron: '0 9 * * *'
 
 permissions:
   issues: write
@@ -14,28 +13,15 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          stale-issue-message: |
-            This issue has been automatically marked as stale because it hasn't had activity in 30 days.
-            
-            **What happens next:**
-            - If no response in 7 days, this will auto-close
-            - Comment or react to keep it open
-            - Closed issues can be reopened anytime
-            
-            This helps me focus on active issues. Thanks for understanding! 🙏
-          
-          close-issue-message: |
-            This issue has been automatically closed due to inactivity.
-            
-            **Not resolved?** Feel free to reopen or create a new issue with updated information.
-          
-          stale-issue-label: 'stale'
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed in 7 days if no further activity occurs.
+            If this is still relevant, please comment or remove the stale label.
+          close-issue-message: >
+            This issue was closed because it has been stale for 37 days with no activity.
+            Feel free to reopen if this is still relevant.
           days-before-stale: 30
           days-before-close: 7
-          
-          # Don't mark these as stale
-          exempt-issue-labels: 'pinned,priority-high,in-progress,roadmap'
-          
-          # Don't touch PRs
-          days-before-pr-stale: -1
-          days-before-pr-close: -1
+          stale-issue-label: stale
+          exempt-issue-labels: pinned,security,bug
+          operations-per-run: 30

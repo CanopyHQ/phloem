@@ -1,0 +1,44 @@
+name: Release Announcement
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  discussions: write
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create discussion announcement
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ github.event.release.tag_name }}"
+          RELEASE_URL="${{ github.event.release.html_url }}"
+          RELEASE_BODY="${{ github.event.release.body }}"
+
+          # Get the Announcements category ID
+          CATEGORY_ID=$(gh api graphql -f query='
+            { repository(owner: "CanopyHQ", name: "phloem") {
+              discussionCategories(first: 10) {
+                nodes { id name }
+              }
+            }}' --jq '.data.repository.discussionCategories.nodes[] | select(.name=="Announcements") | .id')
+
+          REPO_ID=$(gh api repos/CanopyHQ/phloem --jq '.node_id')
+
+          gh api graphql -f query="
+            mutation {
+              createDiscussion(input: {
+                repositoryId: \"$REPO_ID\",
+                categoryId: \"$CATEGORY_ID\",
+                title: \"$RELEASE_TAG released\",
+                body: \"A new version of Phloem has been released.\n\n**Release:** [$RELEASE_TAG]($RELEASE_URL)\n\nSee the [release notes]($RELEASE_URL) for details.\"
+              }) {
+                discussion { url }
+              }
+            }"
