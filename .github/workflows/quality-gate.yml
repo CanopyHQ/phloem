@@ -65,10 +65,23 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Install sqlite3 headers (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          # Download SQLite amalgamation for headers
+          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3470200.zip -o sqlite.zip
+          unzip -q sqlite.zip
+          mkdir -p /c/sqlite3
+          cp sqlite-amalgamation-3470200/sqlite3.h /c/sqlite3/
+          cp sqlite-amalgamation-3470200/sqlite3ext.h /c/sqlite3/
+          echo "CGO_CFLAGS=-I/c/sqlite3" >> $GITHUB_ENV
+
       - name: Build
         run: go build -v ./...
 
       - name: Verify MCP server starts
+        shell: bash
         run: |
           go build -o phloem-test .
           # MCP server expects stdin, just verify it compiles and has help
@@ -89,9 +102,9 @@ jobs:
           go-version: '1.24'
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          version: v2.1.0
           args: --timeout=5m
 
   # ==========================================================================

@@ -4,10 +4,43 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// ensurePhloemInPath builds the phloem binary and adds it to PATH for tests
+// that call exec.LookPath("phloem"). Returns a cleanup function.
+func ensurePhloemInPath(t *testing.T) func() {
+	t.Helper()
+
+	// Check if phloem is already in PATH
+	if _, err := exec.LookPath("phloem"); err == nil {
+		return func() {}
+	}
+
+	// Build phloem into a temp bin directory
+	binDir := t.TempDir()
+	binary := filepath.Join(binDir, "phloem")
+	if runtime.GOOS == "windows" {
+		binary += ".exe"
+	}
+
+	// Build from the module root (one level up from cmd/)
+	cmd := exec.Command("go", "build", "-o", binary, ".")
+	cmd.Dir = filepath.Join("..")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Skipf("cannot build phloem binary for test: %v\n%s", err, out)
+	}
+
+	origPath := os.Getenv("PATH")
+	os.Setenv("PATH", binDir+string(os.PathListSeparator)+origPath)
+	return func() {
+		os.Setenv("PATH", origPath)
+	}
+}
 
 func TestExecute_Setup_Usage(t *testing.T) {
 	defer setArgs("phloem", "setup")()
@@ -32,6 +65,7 @@ func TestExecute_Setup_UnknownIDE(t *testing.T) {
 }
 
 func TestExecute_Setup_Cursor(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	tmpDir := t.TempDir()
 	orig := os.Getenv("PHLOEM_DATA_DIR")
 	os.Setenv("PHLOEM_DATA_DIR", tmpDir)
@@ -51,6 +85,7 @@ func TestExecute_Setup_Cursor(t *testing.T) {
 }
 
 func TestExecute_Setup_Windsurf(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	tmpDir := t.TempDir()
 	os.Setenv("PHLOEM_DATA_DIR", tmpDir)
 	defer os.Unsetenv("PHLOEM_DATA_DIR")
@@ -121,6 +156,7 @@ func getMCPServers(t *testing.T, config map[string]interface{}) map[string]inter
 }
 
 func TestSetupCursor_CreatesConfig(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
@@ -159,6 +195,7 @@ func TestSetupCursor_CreatesConfig(t *testing.T) {
 }
 
 func TestSetupCursor_PreservesExistingServers(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
@@ -203,6 +240,7 @@ func TestSetupCursor_PreservesExistingServers(t *testing.T) {
 }
 
 func TestSetupCursor_Idempotent(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
@@ -233,6 +271,7 @@ func TestSetupCursor_Idempotent(t *testing.T) {
 }
 
 func TestSetupWindsurf_CreatesConfig(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
@@ -271,6 +310,7 @@ func TestSetupWindsurf_CreatesConfig(t *testing.T) {
 }
 
 func TestSetupWindsurf_PreservesExistingServers(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
@@ -314,6 +354,7 @@ func TestSetupWindsurf_PreservesExistingServers(t *testing.T) {
 }
 
 func TestSetupAutoDetect(t *testing.T) {
+	defer ensurePhloemInPath(t)()
 	home, cleanup := setupTestHome(t)
 	defer cleanup()
 
