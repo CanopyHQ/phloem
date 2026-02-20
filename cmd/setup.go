@@ -78,6 +78,22 @@ func init() {
 			return runSetupCline()
 		},
 	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "neovim",
+		Short: "Configure Phloem for Neovim (mcphub.nvim)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupNeovim()
+		},
+	})
+
+	setupCmd.AddCommand(&cobra.Command{
+		Use:   "warp",
+		Short: "Show Warp MCP setup instructions",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSetupWarp()
+		},
+	})
 }
 
 // runSetup auto-detects and configures IDEs
@@ -155,6 +171,17 @@ func runSetup() error {
 			} else {
 				detected++
 			}
+		}
+	}
+
+	// Check for Neovim (mcphub.nvim)
+	neovimPath := neovimMCPConfigPath()
+	if _, err := os.Stat(filepath.Dir(neovimPath)); err == nil {
+		fmt.Println("👉 Detected Neovim (mcphub)")
+		if err := runSetupNeovim(); err != nil {
+			fmt.Printf("   ❌ Neovim setup failed: %v\n", err)
+		} else {
+			detected++
 		}
 	}
 
@@ -678,6 +705,110 @@ func runSetupCline() error {
 	fmt.Println("✅ Phloem is now configured for Cline!")
 	fmt.Println()
 	fmt.Println("No restart needed — Cline detects config changes automatically.")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	return nil
+}
+
+// neovimMCPConfigPath returns the mcphub.nvim servers.json path
+func neovimMCPConfigPath() string {
+	home, _ := os.UserHomeDir()
+	switch runtime.GOOS {
+	case "linux":
+		if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
+			return filepath.Join(xdg, "mcphub", "servers.json")
+		}
+		return filepath.Join(home, ".config", "mcphub", "servers.json")
+	default: // darwin, windows
+		return filepath.Join(home, ".config", "mcphub", "servers.json")
+	}
+}
+
+// runSetupNeovim configures mcphub.nvim servers.json
+func runSetupNeovim() error {
+	fmt.Println("🔧 Setting up Phloem for Neovim (mcphub.nvim)...")
+	fmt.Println()
+
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		return fmt.Errorf("phloem binary not found in PATH")
+	}
+	fmt.Printf("✓ Found phloem at: %s\n", phloemPath)
+
+	configPath := neovimMCPConfigPath()
+	configDir := filepath.Dir(configPath)
+
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return fmt.Errorf("failed to create mcphub config directory: %w", err)
+		}
+	}
+
+	// Read or create config
+	var config map[string]interface{}
+	if data, err := os.ReadFile(configPath); err == nil {
+		if err := json.Unmarshal(data, &config); err != nil {
+			return fmt.Errorf("failed to parse existing servers.json: %w", err)
+		}
+		fmt.Println("✓ Found existing servers.json")
+	} else {
+		config = make(map[string]interface{})
+		fmt.Println("✓ Creating new servers.json")
+	}
+
+	// mcphub uses "mcpServers" key
+	if config["mcpServers"] == nil {
+		config["mcpServers"] = make(map[string]interface{})
+	}
+	mcpServers := config["mcpServers"].(map[string]interface{})
+	mcpServers["phloem"] = map[string]interface{}{
+		"command": phloemPath,
+		"args":    []string{"serve"},
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write servers.json: %w", err)
+	}
+
+	fmt.Printf("✓ Updated: %s\n", configPath)
+	fmt.Println()
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("✅ Phloem is now configured for Neovim!")
+	fmt.Println()
+	fmt.Println("Requires mcphub.nvim plugin. Install via lazy.nvim:")
+	fmt.Println("  { \"ravitemer/mcphub.nvim\", build = \"npm install -g mcp-hub@latest\" }")
+	fmt.Println()
+	fmt.Println("No restart needed — run :MCPHub in Neovim to reload.")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	return nil
+}
+
+// runSetupWarp prints Warp setup instructions (no local config file available)
+func runSetupWarp() error {
+	phloemPath, err := exec.LookPath("phloem")
+	if err != nil {
+		phloemPath = "/usr/local/bin/phloem"
+	}
+
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("Warp MCP Setup (manual)")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println()
+	fmt.Println("Warp stores MCP config in the cloud, not on disk.")
+	fmt.Println("To add Phloem:")
+	fmt.Println()
+	fmt.Println("  1. Open Warp Settings > MCP Servers")
+	fmt.Println("  2. Click + Add")
+	fmt.Println("  3. Paste this JSON:")
+	fmt.Println()
+	fmt.Printf("  {\n    \"mcpServers\": {\n      \"phloem\": {\n        \"command\": \"%s\",\n        \"args\": [\"serve\"]\n      }\n    }\n  }\n", phloemPath)
+	fmt.Println()
+	fmt.Println("  4. Click Save")
+	fmt.Println()
+	fmt.Println("No restart needed — available on next message.")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	return nil
 }

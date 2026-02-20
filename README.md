@@ -7,7 +7,7 @@
 [![Release](https://img.shields.io/github/v/release/CanopyHQ/phloem)](https://github.com/CanopyHQ/phloem/releases)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io)
 
-Phloem is a local [MCP](https://modelcontextprotocol.io) server that gives your AI persistent memory across sessions. It works with **any tool that supports the Model Context Protocol** — an open standard. Today that includes Claude Code, VS Code, Cursor, Windsurf, Zed, Cline, Continue, JetBrains, and more arriving every week.
+Phloem is a local [MCP](https://modelcontextprotocol.io) server that gives your AI persistent memory across sessions. It works with **any tool that supports the Model Context Protocol** — an open standard. Today that includes Claude Code, VS Code, Cursor, Windsurf, Zed, Neovim, Cline, Warp, Continue, JetBrains, and more arriving every week.
 
 You install it once. Every MCP-compatible AI tool on your machine gets memory.
 
@@ -81,7 +81,7 @@ phloem setup claude-code
 
 No restart needed. Start a session and your AI has memory.
 
-For **all other supported tools** (VS Code, Cursor, Windsurf, Zed, Cline, Continue, JetBrains), see the **[Supported Tools Guide](docs/SUPPORTED_TOOLS.md)**.
+For **all other supported tools** (VS Code, Cursor, Windsurf, Zed, Neovim, Cline, Warp, Continue, JetBrains), see the **[Supported Tools Guide](docs/SUPPORTED_TOOLS.md)**.
 
 Or just run `phloem setup` — it auto-detects everything on your machine.
 

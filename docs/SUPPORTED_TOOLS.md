@@ -12,7 +12,7 @@ Phloem works with any tool that supports the [Model Context Protocol (MCP)](http
 phloem setup
 ```
 
-This scans your machine for supported tools and configures each one automatically. Currently auto-detects: Claude Code, VS Code, Cursor, Windsurf, Zed, and Cline.
+This scans your machine for supported tools and configures each one automatically. Currently auto-detects: Claude Code, VS Code, Cursor, Windsurf, Zed, Cline, and Neovim.
 
 ---
 
@@ -146,6 +146,46 @@ No restart needed. Config at:
   }
 }
 ```
+
+---
+
+## Neovim (via mcphub.nvim)
+
+```bash
+phloem setup neovim
+```
+
+Requires the [mcphub.nvim](https://github.com/ravitemer/mcphub.nvim) plugin. Config at `~/.config/mcphub/servers.json`:
+
+```json
+{
+  "mcpServers": {
+    "phloem": {
+      "command": "/usr/local/bin/phloem",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+No restart needed — run `:MCPHub` in Neovim to reload. Works with avante.nvim, codecompanion.nvim, and any plugin that integrates with mcphub.
+
+---
+
+## Warp
+
+```bash
+phloem setup warp
+```
+
+Warp stores MCP config in the cloud, not on disk. The command above prints the JSON to paste into Warp's UI:
+
+1. Open **Settings > MCP Servers**
+2. Click **+ Add**
+3. Paste the JSON shown by the command
+4. Click **Save**
+
+No restart needed — available on next message.
 
 ---
 
