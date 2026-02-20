@@ -80,8 +80,11 @@ jobs:
 
       - name: Build Windows amd64
         run: |
+          # Copy sqlite3 headers to isolated dir so mingw doesn't pull in glibc headers
+          mkdir -p /tmp/sqlite3-headers
+          cp /usr/include/sqlite3.h /usr/include/sqlite3ext.h /tmp/sqlite3-headers/
           CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc \
-            CGO_CFLAGS="-I/usr/include" \
+            CGO_CFLAGS="-I/tmp/sqlite3-headers" \
             go build \
             -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             -o dist/phloem-windows-amd64/phloem.exe .
