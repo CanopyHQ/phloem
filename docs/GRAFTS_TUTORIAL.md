@@ -109,7 +109,7 @@ Grafts preserve citations to source files:
 1. **Expert** exports a graft (`stripe-patterns.graft`)
 2. **Expert** shares on Twitter/Slack
 3. **Learner** sees it: "I need that!"
-4. **Learner** installs Phloem (`brew install phloemhq/tap/phloem`) to import it
+4. **Learner** installs Phloem (`brew install canopyhq/tap/phloem`) to import it
 5. **Learner** now has Phloem and starts creating their own context
 6. **Learner** exports their own grafts
 7. **Loop continues** - exponential growth

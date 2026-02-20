@@ -48,7 +48,7 @@ echo ""
 if [[ "$OS" == "darwin" ]] && command -v brew &> /dev/null; then
     echo -e "${GREEN}Homebrew detected! Using brew install...${NC}"
     echo ""
-    brew tap phloemhq/tap 2>/dev/null || true
+    brew tap canopyhq/tap 2>/dev/null || true
     brew install phloem
     echo ""
     echo -e "${GREEN}✅ Phloem installed via Homebrew${NC}"

@@ -101,7 +101,7 @@ release:
 brews:
   - name: phloem
     repository:
-      owner: phloemhq
+      owner: CanopyHQ
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     commit_author:
