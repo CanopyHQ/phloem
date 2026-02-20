@@ -19,18 +19,14 @@ import (
 
 var testServerCmd *exec.Cmd
 var testServerStdin io.WriteCloser
-var testServerStdout io.ReadCloser
 var testServerReader *bufio.Reader
 var testStore *memory.Store
-var testBinaryPath string
 
 // TestContext holds state between steps
 type TestContext struct {
 	ctx            context.Context
 	lastResponse   map[string]interface{}
-	lastError      error
 	storedMemoryID string
-	memories       []map[string]interface{}
 	// CLI run state
 	lastCLIStdout   string
 	lastCLIStderr   string
@@ -59,8 +55,6 @@ func setupTestServer() error {
 			binaryPath = "/tmp/phloem-test"
 		}
 	}
-	testBinaryPath = binaryPath
-
 	// Set up temp data directory (reuse if already set)
 	tmpDir := os.Getenv("PHLOEM_DATA_DIR")
 	if tmpDir == "" {
@@ -92,7 +86,6 @@ func setupTestServer() error {
 
 	testServerCmd = cmd
 	testServerStdin = stdin
-	testServerStdout = stdout
 	testServerReader = bufio.NewReader(stdout)
 
 	// Also create store for direct access
@@ -482,23 +475,6 @@ func (tc *TestContext) checkResultsContain(content string) error {
 }
 
 
-func (tc *TestContext) checkResponseData(expected string) error {
-	if tc.lastResponse == nil {
-		return fmt.Errorf("no response received")
-	}
-
-	data, ok := tc.lastResponse["data"].(string)
-	if !ok {
-		return fmt.Errorf("data field missing or wrong type")
-	}
-
-	if data != expected {
-		return fmt.Errorf("expected data %s, got %s", expected, data)
-	}
-
-	return nil
-}
-
 func (tc *TestContext) mcpServerRunning() error {
 	// Server will be started when needed
 	return nil
@@ -559,7 +535,6 @@ func (tc *TestContext) memoryStoreInitialized() error {
 		_ = testServerCmd.Process.Kill()
 		testServerCmd = nil
 		testServerStdin = nil
-		testServerStdout = nil
 		testServerReader = nil
 	}
 

@@ -166,12 +166,14 @@ zero-defect: build
 preflight: build
 	@echo "Running preflight checks..."
 	@echo ""
-	@echo "1/4 go vet..."
+	@echo "1/5 go vet..."
 	@go vet ./...
-	@echo "2/4 Build... (already done)"
-	@echo "3/4 Unit tests (short)..."
+	@echo "2/5 Build... (already done)"
+	@echo "3/5 Unit tests (short)..."
 	@go test -short ./...
-	@echo "4/4 MCP protocol check..."
+	@echo "4/5 Lint..."
+	@if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run --timeout=5m ./...; else echo "golangci-lint not installed, skipping (install: brew install golangci-lint)"; fi
+	@echo "5/5 MCP protocol check..."
 	@TOOL_COUNT=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -c protocolVersion); \
 	if [ "$$TOOL_COUNT" -eq 1 ]; then echo "MCP initialize: OK"; else echo "MCP initialize: FAILED"; exit 1; fi
 	@echo ""
@@ -203,18 +205,59 @@ verify-install: build
 	@echo "Running install verification..."
 	@if [ -f scripts/verify-install.sh ]; then bash scripts/verify-install.sh; else echo "verify-install.sh not found"; exit 1; fi
 
-## ci-local: Mirror what GitHub Actions CI runs
-ci-local: preflight lint
+## ci-local: Exact mirror of GitHub Actions quality-gate.yml
+## Run this before pushing. If it passes locally, CI will pass.
+ci-local:
+	@echo "=========================================="
+	@echo " Local CI — mirrors quality-gate.yml"
+	@echo "=========================================="
 	@echo ""
-	@echo "Running full CI locally..."
-	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@echo "[1/5] Unit tests with race detector + coverage..."
+	@go test ./... -v -race -coverprofile=coverage.out -covermode=atomic
 	@COVERAGE=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
 	echo "Coverage: $${COVERAGE}%"; \
 	if [ $$(echo "$$COVERAGE < 70" | bc -l) -eq 1 ]; then \
-		echo "Coverage below 70% threshold"; exit 1; \
+		echo "FAIL: Coverage $${COVERAGE}% below 70% threshold"; exit 1; \
 	fi
 	@echo ""
-	@echo "Local CI PASSED"
+	@echo "[2/5] Build verification..."
+	@go build -v ./...
+	@go build -o phloem-test .
+	@./phloem-test --help > /dev/null 2>&1 || true
+	@rm -f phloem-test
+	@echo ""
+	@echo "[3/5] Lint..."
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run --timeout=5m ./...; \
+	else \
+		echo "WARN: golangci-lint not installed (brew install golangci-lint)"; \
+	fi
+	@echo ""
+	@echo "[4/5] MCP protocol compliance..."
+	@go build -o phloem-test .
+	@PROTO=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./phloem-test serve 2>/dev/null | head -1); \
+	echo "$$PROTO" | jq -e '.result.protocolVersion' > /dev/null 2>&1 && echo "Initialize: OK" || (echo "FAIL: MCP initialize"; exit 1)
+	@TOOLS=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | timeout 5 ./phloem-test serve 2>/dev/null | tail -1); \
+	TOOL_COUNT=$$(echo "$$TOOLS" | jq '.result.tools | length' 2>/dev/null); \
+	if [ "$$TOOL_COUNT" = "14" ]; then echo "Tools list: OK ($$TOOL_COUNT tools)"; else echo "FAIL: Expected 14 tools, got $$TOOL_COUNT"; exit 1; fi
+	@rm -f phloem-test
+	@echo ""
+	@echo "[5/5] Privacy verification..."
+	@go build -o phloem-test .
+	@export PHLOEM_DATA_DIR=$$(mktemp -d); \
+	printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"remember","arguments":{"content":"CI privacy test"}}}' | timeout 10 ./phloem-test serve 2>/dev/null & \
+	PID=$$!; sleep 2; \
+	if lsof -i -P 2>/dev/null | grep -q "$$PID"; then \
+		echo "FAIL: phloem has network connections"; kill $$PID 2>/dev/null; exit 1; \
+	fi; \
+	echo "Privacy: OK (no network connections)"; \
+	kill $$PID 2>/dev/null || true; \
+	rm -rf "$$PHLOEM_DATA_DIR"
+	@rm -f phloem-test
+	@echo ""
+	@echo "=========================================="
+	@echo " Local CI PASSED — safe to push"
+	@echo "=========================================="
 
 ## help: Show this help
 help:

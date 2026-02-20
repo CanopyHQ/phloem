@@ -242,6 +242,9 @@ func runDoctor(fix bool) error {
 	if issues == 0 && warnings == 0 {
 		fmt.Println("✅ All checks passed! Phloem is ready to use.")
 	} else {
+		if fixed > 0 {
+			fmt.Printf("🛠️  Auto-fixed %d issue(s)\n", fixed)
+		}
 		if issues > 0 {
 			fmt.Printf("❌ Found %d critical issue(s)\n", issues)
 		}

@@ -1,0 +1,30 @@
+version: "2"
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+  disable:
+    # TODO: Enable errcheck after fixing ~40 pre-existing unchecked error returns.
+    - errcheck
+
+  settings:
+    staticcheck:
+      checks:
+        - "all"
+        - "-SA1019"  # Allow deprecated functions (strings.Title)
+        - "-ST1000"  # Don't require package comments
+        - "-ST1005"  # Allow capitalized error strings
+        - "-ST1022"  # Don't enforce var comment format
+        - "-QF1012"  # Allow WriteString(Sprintf(...))
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - unused
+      - path: test/
+        linters:
+          - unused
