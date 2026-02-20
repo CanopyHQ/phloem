@@ -109,7 +109,7 @@ jobs:
           go-version: '1.24'
 
       - name: Build Phloem
-        run: go build -o phloem ./...
+        run: go build -o phloem .
 
       - name: Test MCP initialize
         run: |
