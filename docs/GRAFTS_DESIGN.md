@@ -12,7 +12,7 @@ If Phloem is the *standard format* for sharing "Context Bundles" (Grafts), it gr
 2. Expert exports a **Graft**: `stripe-patterns.graft`.
 3. Expert shares Graft on Twitter/Team Slack.
 4. Junior Developer sees it: "I need that context."
-5. Junior installs Phloem (`brew install phloemhq/tap/phloem`) to consume the Graft.
+5. Junior installs Phloem (`brew install canopyhq/tap/phloem`) to consume the Graft.
 6. Junior now has Phloem and starts generating their own context.
 
 ---

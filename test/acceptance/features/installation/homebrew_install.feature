@@ -8,7 +8,7 @@ Feature: Homebrew Installation
   Scenario: Fresh install on macOS
     Given I have Homebrew installed
     And I have not previously installed Phloem
-    When I run "brew tap phloemhq/tap"
+    When I run "brew tap canopyhq/tap"
     Then the command should succeed
     When I run "brew install phloem"
     Then the command should succeed
@@ -62,14 +62,14 @@ Feature: Homebrew Installation
 
   @critical
   Scenario: Install without tapping first
-    Given I have not tapped phloemhq/tap
+    Given I have not tapped canopyhq/tap
     When I run "brew install phloem"
     Then the command should fail
     And the error should mention "No available formula"
 
   Scenario: Install with network error
     Given the network is unavailable
-    When I run "brew install phloemhq/tap/phloem"
+    When I run "brew install canopyhq/tap/phloem"
     Then the command should fail
     And the error should mention network or connection
 

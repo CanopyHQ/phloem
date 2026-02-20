@@ -12,7 +12,7 @@ Phloem is a local [MCP](https://modelcontextprotocol.io) server that gives your 
 You install it once. Every MCP-compatible AI tool on your machine gets memory.
 
 ```bash
-brew install phloemhq/tap/phloem   # or download binary from Releases
+brew install canopyhq/tap/phloem   # or download binary from Releases
 phloem setup                        # auto-detects your tools
 ```
 
@@ -75,7 +75,7 @@ Phloem speaks MCP — the same open protocol that Claude Code, VS Code, Cursor, 
 ## Quick Start with Claude Code
 
 ```bash
-brew install phloemhq/tap/phloem
+brew install canopyhq/tap/phloem
 phloem setup claude-code
 ```
 
@@ -92,7 +92,7 @@ Or just run `phloem setup` — it auto-detects everything on your machine.
 **macOS (Homebrew):**
 
 ```bash
-brew install phloemhq/tap/phloem
+brew install canopyhq/tap/phloem
 phloem setup
 ```
 
