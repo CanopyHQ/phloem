@@ -58,12 +58,13 @@ jobs:
         with:
           go-version: '1.24'
 
-      - name: Install cross-compilers
+      - name: Install cross-compilers and dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             gcc-aarch64-linux-gnu \
-            gcc-mingw-w64-x86-64
+            gcc-mingw-w64-x86-64 \
+            libsqlite3-dev
 
       - name: Build Linux amd64
         run: |
@@ -79,7 +80,9 @@ jobs:
 
       - name: Build Windows amd64
         run: |
-          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build \
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc \
+            CGO_CFLAGS="-I/usr/include" \
+            go build \
             -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             -o dist/phloem-windows-amd64/phloem.exe .
 
