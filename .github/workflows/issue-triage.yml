@@ -98,7 +98,7 @@ I'll review it within 48 hours and respond with next steps.
             });
 
       - name: Notify on critical issues
-        if: contains(github.event.issue.title, 'critical') || contains(github.event.issue.title, 'urgent') || contains(github.event.issue.title, 'security')
+        if: ${{ contains(github.event.issue.title, 'critical') || contains(github.event.issue.title, 'urgent') || contains(github.event.issue.title, 'security') }}
         uses: actions/github-script@v7
         with:
           script: |
