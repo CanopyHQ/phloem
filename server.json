@@ -6,11 +6,11 @@
     "url": "https://github.com/CanopyHQ/phloem",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/CanopyHQ/phloem/releases/download/v0.1.1/phloem-darwin-arm64.mcpb",
+      "identifier": "https://github.com/CanopyHQ/phloem/releases/download/v0.1.2/phloem-darwin-arm64.mcpb",
       "fileSha256": "PLACEHOLDER",
       "transport": {
         "type": "stdio"
