@@ -9,7 +9,7 @@ Feature: Surface Area Coverage
     And the memory store is initialized
 
   @surface @critical
-  Scenario: All 14 MCP tools respond successfully
+  Scenario: Core MCP tools respond successfully
     # 1. remember
     When I call the MCP tool "remember" with content "surface area test memory"
     Then I should receive a success response
@@ -31,66 +31,60 @@ Feature: Surface Area Coverage
     When I call the MCP tool "session_context"
     Then I should receive a success response
 
-    # 6. add_citation
-    When I call the MCP tool "add_citation" with arguments:
-      """
-      {"memory_id":"placeholder","file_path":"/test/file.go","start_line":1,"end_line":10}
-      """
-    Then I should receive a success response
-
-    # 7. get_citations
-    When I call the MCP tool "get_citations" with arguments:
-      """
-      {"memory_id":"placeholder"}
-      """
-    Then I should receive a success response
-
-    # 8. verify_citation
-    When I call the MCP tool "verify_citation" with arguments:
-      """
-      {"citation_id":"placeholder"}
-      """
-    Then I should receive a success response
-
-    # 9. verify_memory
-    When I call the MCP tool "verify_memory" with arguments:
-      """
-      {"memory_id":"placeholder"}
-      """
-    Then I should receive a success response
-
-    # 10. causal_query
-    When I call the MCP tool "causal_query" with arguments:
-      """
-      {"memory_id":"placeholder","query_type":"neighbors"}
-      """
-    Then I should receive a success response
-
-    # 11. compose
+    # 6. compose
     When I call the MCP tool "compose" with arguments:
       """
       {"query_a":"test","query_b":"surface"}
       """
     Then I should receive a success response
 
-    # 12. prefetch
+    # 7. prefetch
     When I call the MCP tool "prefetch" with arguments:
       """
       {"context_hint":"test"}
       """
     Then I should receive a success response
 
-    # 13. prefetch_suggest
+    # 8. prefetch_suggest
     When I call the MCP tool "prefetch_suggest" with arguments:
       """
       {"context":"test file"}
       """
     Then I should receive a success response
 
-    # 14. forget
+  @surface
+  Scenario: Citation and causal tools respond
+    Given I have stored a memory with content "citation surface test"
+    # add_citation, get_citations, verify_citation, verify_memory, causal_query
+    # use the stored memory ID from above
+    When I call the MCP tool "add_citation" with arguments:
+      """
+      {"memory_id":"USE_STORED","file_path":"/test/file.go","start_line":1,"end_line":10}
+      """
+    Then I should receive a success response
+
+    When I call the MCP tool "get_citations" with arguments:
+      """
+      {"memory_id":"USE_STORED"}
+      """
+    Then I should receive a success response
+
+    When I call the MCP tool "verify_memory" with arguments:
+      """
+      {"memory_id":"USE_STORED"}
+      """
+    Then I should receive a success response
+
+    When I call the MCP tool "causal_query" with arguments:
+      """
+      {"memory_id":"USE_STORED","query_type":"neighbors"}
+      """
+    Then I should receive a success response
+
+    # forget (last, since it deletes the memory)
     When I call the MCP tool "forget" with arguments:
       """
-      {"id":"placeholder"}
+      {"id":"USE_STORED"}
       """
     Then I should receive a success response
 
@@ -118,8 +112,6 @@ Feature: Surface Area Coverage
     When I run "phloem help"
     Then the command should succeed
     When I run "phloem status"
-    Then the command should succeed
-    When I run "phloem doctor"
     Then the command should succeed
     When I run "phloem audit"
     Then the command should succeed

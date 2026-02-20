@@ -531,8 +531,14 @@ func (tc *TestContext) callMCPToolWithJSON(tool string, jsonStr *godog.DocString
 		return err
 	}
 
+	// Replace USE_STORED placeholder with actual stored memory ID
+	content := jsonStr.Content
+	if tc.storedMemoryID != "" {
+		content = strings.ReplaceAll(content, "USE_STORED", tc.storedMemoryID)
+	}
+
 	var args map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr.Content), &args); err != nil {
+	if err := json.Unmarshal([]byte(content), &args); err != nil {
 		return fmt.Errorf("invalid JSON arguments: %w", err)
 	}
 
