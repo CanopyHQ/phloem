@@ -40,7 +40,7 @@ All changes require a pull request. Direct pushes to `main` are blocked.
 
 ### Prerequisites
 
-- Go 1.21+
+- Go 1.24+
 - C compiler (GCC, MinGW, or Xcode CLT) — required for sqlite-vec/CGO
 - `golangci-lint` (optional, for linting)
 

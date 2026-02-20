@@ -83,7 +83,7 @@ func findGitDir(startPath string) (string, error) {
 // - git@github.com:owner/repo.git
 func parseRemoteURL(url string) (owner, repo string, err error) {
 	url = strings.TrimSpace(url)
-	
+
 	// Remove .git suffix
 	url = strings.TrimSuffix(url, ".git")
 
@@ -106,13 +106,13 @@ func parseRemoteURL(url string) (owner, repo string, err error) {
 		// Remove protocol
 		url = strings.TrimPrefix(url, "https://")
 		url = strings.TrimPrefix(url, "http://")
-		
+
 		// Split by /
 		parts := strings.Split(url, "/")
 		if len(parts) < 3 {
 			return "", "", fmt.Errorf("invalid HTTPS URL format: %s", url)
 		}
-		
+
 		// parts[0] is domain (github.com), parts[1] is owner, parts[2] is repo
 		return parts[1], parts[2], nil
 	}

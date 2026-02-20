@@ -2,7 +2,7 @@
 
 **Your AI forgets everything when you close the tab. Phloem fixes that.**
 
-[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/CanopyHQ/phloem)](https://github.com/CanopyHQ/phloem/releases)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io)
@@ -108,7 +108,7 @@ CGO_ENABLED=1 go build -o phloem .
 ./phloem setup
 ```
 
-Requires Go 1.21+ and a C compiler (for sqlite-vec/CGO).
+Requires Go 1.24+ and a C compiler (for sqlite-vec/CGO).
 
 ---
 

@@ -4,13 +4,16 @@
 
 # Binary name (phloem for monorepo/CI; matches release-gate cp phloem/phloem)
 BINARY=phloem
-VERSION=0.2.0
+VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Quality thresholds
 MIN_COVERAGE=70
 LINT_TIMEOUT=5m
+
+# Portable timeout (macOS ships without GNU timeout)
+TIMEOUT=$(shell command -v timeout 2>/dev/null || command -v gtimeout 2>/dev/null || echo "")
 
 # Build flags
 LDFLAGS=-ldflags "-s -w -X 'main.version=$(VERSION)' -X 'main.commit=$(COMMIT)' -X 'main.date=$(DATE)'"
@@ -144,7 +147,7 @@ acceptance-critical:
 ## mcp-test: Test MCP protocol compliance
 mcp-test: build
 	@echo "Testing MCP protocol..."
-	@echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -q protocolVersion && echo "Initialize: OK" || echo "Initialize: FAILED"
+	@echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | $(TIMEOUT) 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -q protocolVersion && echo "Initialize: OK" || echo "Initialize: FAILED"
 	@echo "MCP protocol test passed"
 
 ## release-check: Full release verification (DEPRECATED - use zero-defect)
@@ -164,6 +167,7 @@ zero-defect: build
 
 ## preflight: Fast local check before committing (~30s)
 preflight: build
+	@if [ -z "$(TIMEOUT)" ]; then echo "ERROR: 'timeout' not found. Install GNU coreutils: brew install coreutils"; exit 1; fi
 	@echo "Running preflight checks..."
 	@echo ""
 	@echo "1/5 go vet..."
@@ -174,7 +178,7 @@ preflight: build
 	@echo "4/5 Lint..."
 	@if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run --timeout=5m ./...; else echo "golangci-lint not installed, skipping (install: brew install golangci-lint)"; fi
 	@echo "5/5 MCP protocol check..."
-	@TOOL_COUNT=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -c protocolVersion); \
+	@TOOL_COUNT=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | $(TIMEOUT) 5 ./$(BINARY) serve 2>/dev/null | head -1 | grep -c protocolVersion); \
 	if [ "$$TOOL_COUNT" -eq 1 ]; then echo "MCP initialize: OK"; else echo "MCP initialize: FAILED"; exit 1; fi
 	@echo ""
 	@echo "Preflight PASSED - ready to commit"
@@ -235,9 +239,9 @@ ci-local:
 	@echo ""
 	@echo "[4/5] MCP protocol compliance..."
 	@go build -o phloem-test .
-	@PROTO=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | timeout 5 ./phloem-test serve 2>/dev/null | head -1); \
+	@PROTO=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | $(TIMEOUT) 5 ./phloem-test serve 2>/dev/null | head -1); \
 	echo "$$PROTO" | jq -e '.result.protocolVersion' > /dev/null 2>&1 && echo "Initialize: OK" || (echo "FAIL: MCP initialize"; exit 1)
-	@TOOLS=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | timeout 5 ./phloem-test serve 2>/dev/null | tail -1); \
+	@TOOLS=$$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | $(TIMEOUT) 5 ./phloem-test serve 2>/dev/null | tail -1); \
 	TOOL_COUNT=$$(echo "$$TOOLS" | jq '.result.tools | length' 2>/dev/null); \
 	if [ "$$TOOL_COUNT" = "14" ]; then echo "Tools list: OK ($$TOOL_COUNT tools)"; else echo "FAIL: Expected 14 tools, got $$TOOL_COUNT"; exit 1; fi
 	@rm -f phloem-test
@@ -245,7 +249,7 @@ ci-local:
 	@echo "[5/5] Privacy verification..."
 	@go build -o phloem-test .
 	@export PHLOEM_DATA_DIR=$$(mktemp -d); \
-	printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"remember","arguments":{"content":"CI privacy test"}}}' | timeout 10 ./phloem-test serve 2>/dev/null & \
+	printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"remember","arguments":{"content":"CI privacy test"}}}' | $(TIMEOUT) 10./phloem-test serve 2>/dev/null & \
 	PID=$$!; sleep 2; \
 	if lsof -i -P 2>/dev/null | grep -q "$$PID"; then \
 		echo "FAIL: phloem has network connections"; kill $$PID 2>/dev/null; exit 1; \

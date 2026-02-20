@@ -13,7 +13,7 @@ import (
 )
 
 var setupCmd = &cobra.Command{
-	Use:   "setup [ide]",
+	Use:   "setup",
 	Short: "Auto-configure IDE",
 	Long: `Auto-detect and configure IDEs for Phloem.
 

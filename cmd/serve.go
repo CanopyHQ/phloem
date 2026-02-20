@@ -26,7 +26,9 @@ Examples:
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version",
-	Run:   func(cmd *cobra.Command, args []string) { fmt.Printf("phloem %s (commit: %s, built: %s)\n", Version, Commit, Date) },
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("phloem %s (commit: %s, built: %s)\n", Version, Commit, Date)
+	},
 }
 
 var statusCmd = &cobra.Command{
@@ -48,6 +50,8 @@ func runServe() error {
 	fmt.Fprintln(os.Stderr, "It is not an interactive CLI — connect an MCP client (Claude Code, Cursor, etc.).")
 	fmt.Fprintln(os.Stderr, "Press Ctrl+C to stop. Run 'phloem help' for available commands.")
 	fmt.Fprintln(os.Stderr, "")
+
+	mcp.Version = Version
 
 	server, err := mcp.NewServer()
 	if err != nil {
