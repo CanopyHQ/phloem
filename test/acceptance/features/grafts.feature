@@ -45,7 +45,6 @@ Feature: Phloem Grafts - Shareable Memory Bundles
     Then the graft should contain citation data
     And citations should be preserved on import
 
-  @wip
   Scenario: Graft file format validation
     Given I have an invalid graft file "invalid.graft"
     When I try to import "invalid.graft"
