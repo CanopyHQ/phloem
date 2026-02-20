@@ -1,18 +1,90 @@
 # Phloem
 
-**Local-first AI memory with causal graphs**
+**Long-term memory for AI coding tools — local, private, causal**
 
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/CanopyHQ/phloem)](https://github.com/CanopyHQ/phloem/releases)
 
-Phloem is a persistent memory engine for AI coding tools. It runs as an [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server, giving Claude Code, Cursor, and Windsurf long-term memory that survives across sessions. Your conversations and context are stored locally in SQLite with vector search, fully offline, zero config. Your data never leaves your machine.
+Your AI assistant forgets everything when you close the tab. Phloem fixes that.
 
-## Why Phloem?
+It runs as an [MCP](https://modelcontextprotocol.io) server that gives Claude Code, Cursor, and Windsurf persistent memory across sessions. Two commands to install, zero config, everything stays on your machine.
 
-- **Causal memory graphs** -- Not just vector search. Phloem builds a directed acyclic graph linking memories by cause and effect, so your AI assistant understands *why* things happened, not just *what*.
-- **Citation verification with confidence decay** -- Memories are linked to specific code locations. When code changes, confidence scores decay automatically, so stale context does not mislead your AI.
-- **Truly private** -- No accounts, no telemetry, no network calls. SQLite database on your machine. Verify it yourself with `phloem audit`.
+```bash
+brew install phloemhq/tap/phloem
+phloem setup
+```
+
+That's it. Your AI now remembers.
+
+---
+
+## See It In Action
+
+### Your AI remembers decisions across sessions
+
+You're in Claude Code working on an auth system:
+
+> **You:** "We decided to use JWT with refresh tokens, not session cookies. The tokens expire in 15 minutes, refresh tokens in 7 days."
+
+Phloem stores this. Two weeks later, in a new session:
+
+> **You:** "Add the logout endpoint"
+
+Your AI already knows the auth architecture — token expiry, refresh strategy, everything. No re-explaining. It calls `recall` behind the scenes and picks up right where you left off.
+
+### Memories link to code — and know when code changes
+
+Phloem doesn't just store text. It links memories to specific lines in your codebase:
+
+```
+Memory: "Rate limiter uses sliding window, 100 req/min per API key"
+  → src/middleware/rate_limit.go:42-67 (confidence: 0.95)
+```
+
+Refactor that file? Phloem notices. The confidence score **decays automatically**, so your AI won't confidently cite stale information. Run `phloem decay` to update scores, or let it happen naturally.
+
+### Understand *why*, not just *what*
+
+Most memory tools are glorified search. Phloem builds a **causal graph** — a directed acyclic graph linking memories by cause and effect:
+
+```
+"Switched from REST to gRPC for inter-service calls"
+  → caused: "Updated all service clients to use protobuf"
+  → caused: "Added buf.gen.yaml to build pipeline"
+  → caused: "Rewrote integration tests for gRPC streaming"
+```
+
+When your AI recalls the protobuf migration, it can traverse the graph to understand the *full chain of reasoning* that led there — not just the isolated fact.
+
+### Import history you already have
+
+Already been using Claude or ChatGPT? Bring those conversations along:
+
+```bash
+phloem import chatgpt ~/Downloads/conversations.json
+phloem import claude ~/Downloads/claude-export/
+```
+
+### Inspect everything — trust nothing
+
+```bash
+$ phloem audit
+Data inventory:
+  ~/.phloem/memories.db    2.4 MB   (SQLite + sqlite-vec)
+
+Permissions:
+  ~/.phloem/               drwx------  (owner only) ✓
+  ~/.phloem/memories.db    -rw-------  (owner only) ✓
+
+Network activity:
+  No listening sockets found ✓
+  Recommendation: run `sudo lsof -i -P | grep phloem` to verify
+```
+
+No accounts. No telemetry. No network calls. Ever. [Full privacy details →](docs/PRIVACY.md)
+
+---
 
 ## Quick Start
 
@@ -21,13 +93,9 @@ brew install phloemhq/tap/phloem
 phloem setup
 ```
 
-The `phloem setup` command auto-detects which IDEs you have installed (Claude Code, Cursor, Windsurf) and configures each one to use Phloem as an MCP server. That is all you need to do.
-
-## IDE Setup Guides
+`phloem setup` auto-detects your IDEs (Claude Code, Cursor, Windsurf) and configures each one. That's the entire setup.
 
 ### Claude Code
-
-From your terminal:
 
 ```bash
 phloem setup claude-code
@@ -37,25 +105,13 @@ Or from within Claude Code, ask: "please run `phloem setup claude-code` in a ter
 
 No restart needed. The MCP server auto-starts on first tool use.
 
-Under the hood, this registers Phloem via `claude mcp add`:
-
-```bash
-claude mcp add phloem -- phloem serve
-```
-
 ### Cursor
-
-From your terminal:
 
 ```bash
 phloem setup cursor
 ```
 
-Or from within Cursor, ask the AI to run `phloem setup cursor` in a terminal.
-
-**Restart Cursor after setup.**
-
-After setup, your `~/.cursor/mcp.json` will contain:
+Restart Cursor after setup. Your `~/.cursor/mcp.json` will contain:
 
 ```json
 {
@@ -70,17 +126,11 @@ After setup, your `~/.cursor/mcp.json` will contain:
 
 ### Windsurf
 
-From your terminal:
-
 ```bash
 phloem setup windsurf
 ```
 
-Or from within Windsurf, ask the AI to run `phloem setup windsurf` in a terminal.
-
-**Restart Windsurf after setup.**
-
-After setup, your `~/.windsurf/mcp_config.json` will contain:
+Restart Windsurf after setup. Your `~/.windsurf/mcp_config.json` will contain:
 
 ```json
 {
@@ -93,67 +143,72 @@ After setup, your `~/.windsurf/mcp_config.json` will contain:
 }
 ```
 
-### Auto-detect all IDEs
+---
 
-```bash
-phloem setup
-```
+## What Phloem Does
 
-This finds all installed IDEs and configures them in one step.
+### MCP Tools (used by your AI automatically)
 
-## MCP Tools Reference
-
-When connected via MCP, your AI tools get these capabilities:
-
-| Tool | Description |
+| Tool | What it does |
 |------|-------------|
-| `remember` | Store a memory with optional tags and context |
-| `recall` | Semantic search across memories |
-| `forget` | Delete a specific memory by ID |
-| `list_memories` | Browse recent memories, optionally filtered by tags |
-| `memory_stats` | Get statistics about the memory store |
-| `session_context` | Load context from previous sessions |
-| `add_citation` | Link a memory to a specific code location |
-| `verify_citation` | Check if a citation still matches the code |
-| `get_citations` | Get all citations for a memory |
-| `verify_memory` | Verify all citations for a memory |
-| `causal_query` | Query the causal memory graph (neighbors or affected) |
-| `compose` | Run two semantic searches and merge results |
-| `prefetch` | Preload relevant memories for current context |
-| `prefetch_suggest` | Suggest memories to preload for a given context |
+| `remember` | Store a memory with tags and context — "always use snake_case in this repo" |
+| `recall` | Semantic search — finds relevant memories even with different wording |
+| `session_context` | Load previous session context so the AI starts warm, not cold |
+| `add_citation` | Link a memory to `file:line` — "this decision is implemented at auth.go:42" |
+| `verify_citation` | Check if cited code still matches — catches stale references |
+| `verify_memory` | Verify all citations for a memory at once |
+| `causal_query` | Traverse the causal graph — "what else was affected by this decision?" |
+| `compose` | Merge two semantic searches — "find memories about auth AND deployment" |
+| `prefetch` | Preload relevant memories for the current file/context |
+| `forget` | Delete a specific memory |
+| `list_memories` | Browse recent memories, filter by tags |
+| `memory_stats` | How many memories, tags, citations in the store |
 
-## CLI Commands
+### CLI Commands (used by you)
 
-| Command | Description |
+| Command | What it does |
 |---------|-------------|
-| `phloem serve` | Start the MCP server (normally started by IDE) |
-| `phloem setup` | Auto-detect and configure IDEs |
-| `phloem status` | View memory statistics |
-| `phloem doctor` | Diagnose and fix configuration issues |
-| `phloem audit` | Verify privacy (data inventory, permissions, network) |
-| `phloem remember` | Store a memory from the command line |
-| `phloem verify ID` | Verify citations for a specific memory |
-| `phloem decay` | Apply confidence decay to stale citations |
-| `phloem dreams` | View the memory dream log |
-| `phloem import SOURCE PATH` | Import AI history (chatgpt or claude) |
-| `phloem export [FORMAT] [FILE]` | Export memories (json or markdown) |
-| `phloem graft` | Merge memory databases |
-| `phloem version` | Print version information |
+| `phloem setup` | Auto-detect and configure all your IDEs |
+| `phloem status` | See how many memories you have, disk usage, last activity |
+| `phloem remember "..."` | Store a memory from the terminal — `phloem remember "use bun not npm" --tags "tooling"` |
+| `phloem doctor` | Diagnose configuration issues — checks IDE configs, database health |
+| `phloem audit` | Privacy verification — data inventory, file permissions, network check |
+| `phloem decay` | Apply confidence decay to citations where the code has changed |
+| `phloem dreams` | View the memory dream log — see what your AI has been remembering |
+| `phloem verify ID` | Check if a specific memory's code citations still match |
+| `phloem import` | Import ChatGPT or Claude conversation history |
+| `phloem export` | Export all memories as JSON or Markdown |
+| `phloem graft` | Share curated memory packs — export your best practices as a `.graft` file |
+| `phloem version` | Print version info |
+
+---
 
 ## How It Works
 
-- **SQLite + sqlite-vec**: Memories stored locally in `~/.phloem/memories.db` with vector embeddings for semantic search.
-- **Causal DAG**: Memories are linked in a directed acyclic graph. When you recall a memory, Phloem can traverse the graph to find related causes and effects.
-- **Citation verification**: Memories can be linked to specific file:line locations. Phloem checks if the code still matches and decays confidence when it does not.
-- **MCP Protocol**: Communicates with IDEs via JSON-RPC over stdio. Any MCP-compatible tool can use Phloem.
+**SQLite + sqlite-vec** — Everything stored locally in `~/.phloem/memories.db`. Vector embeddings power semantic search — "find memories about authentication" matches "JWT token refresh logic" even though the words don't overlap.
+
+**Causal DAG** — Memories are linked in a directed acyclic graph. When a decision leads to a change, and that change causes another, Phloem captures the chain. Your AI can ask "what would be affected if we reverted this?" and get a real answer.
+
+**Citation verification** — Memories attach to `file:line` ranges. Phloem reads the file and compares. When code drifts, confidence decays. When code is deleted, the citation is marked invalid. Your AI never confidently cites code that no longer exists.
+
+**MCP Protocol** — JSON-RPC over stdio. Any MCP-compatible tool works. No HTTP server, no ports, no network surface.
+
+---
 
 ## Privacy
 
-- **No network calls**: Phloem makes zero network requests. Ever.
-- **No accounts**: No sign-up, no email, no personal information.
-- **No telemetry**: No analytics, no crash reporting, no usage tracking.
-- **Verify it yourself**: Run `phloem audit` to inspect your data, check permissions, and confirm no network activity.
-- **Full details**: See [PRIVACY.md](docs/PRIVACY.md)
+Phloem makes **zero network requests**. This is not a policy — it's architecture. There is no networking code in the binary. Verify it:
+
+```bash
+phloem audit                              # data inventory + permissions
+sudo lsof -i -P | grep phloem            # should show nothing
+```
+
+No accounts. No telemetry. No analytics. No crash reporting. Your memories are a SQLite file on your disk. Delete it anytime: `rm -rf ~/.phloem`.
+
+[Full privacy policy →](docs/PRIVACY.md)
+
+---
 
 ## Build from Source
 
@@ -168,10 +223,10 @@ Requires: Go 1.21+, C compiler (for sqlite-vec/CGO).
 
 ## Contributing
 
-Phloem is licensed under Apache 2.0. Contributions are welcome.
+Apache 2.0. Contributions welcome.
 
-- Report issues: [GitHub Issues](https://github.com/CanopyHQ/phloem/issues)
-- Discuss: [GitHub Discussions](https://github.com/CanopyHQ/phloem/discussions)
+- [Report issues](https://github.com/CanopyHQ/phloem/issues)
+- [Discussions](https://github.com/CanopyHQ/phloem/discussions)
 
 ---
 
