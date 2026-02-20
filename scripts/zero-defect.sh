@@ -182,6 +182,18 @@ else
 fi
 
 # ============================================================================
+# LAYER 7: SURFACE AREA
+# ============================================================================
+log_section "LAYER 7: SURFACE AREA"
+
+echo "Running surface area test (every CLI command + MCP tool)..."
+if "$SCRIPT_DIR/surface-test.sh" ./phloem 2>&1; then
+    log_pass "Surface area test passed"
+else
+    log_fail "Surface area test failed"
+fi
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 log_section "ZERO-DEFECT GATE SUMMARY"
