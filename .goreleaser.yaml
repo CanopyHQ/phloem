@@ -27,25 +27,53 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
-  # Linux builds require cross-compilation toolchain for CGO (sqlite-vec).
-  # Uncomment when CI has a linux builder or cross-compile is configured.
-  # - id: phloem-linux-amd64
-  #   binary: phloem
-  #   main: ./main.go
-  #   env:
-  #     - CGO_ENABLED=1
-  #   goos:
-  #     - linux
-  #   goarch:
-  #     - amd64
-  #   ldflags:
-  #     - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+  - id: phloem-linux-amd64
+    binary: phloem
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: phloem-linux-arm64
+    binary: phloem
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+    goos:
+      - linux
+    goarch:
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: phloem-windows-amd64
+    binary: phloem
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
 archives:
   - id: phloem-archive
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
     formats:
       - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
     files:
       - README.md
       - LICENSE
@@ -88,15 +116,12 @@ brews:
     caveats: |
       Phloem is installed!
 
-      Quick Setup for Cursor:
-        Add to ~/.cursor/mcp.json:
-        {
-          "mcpServers": {
-            "phloem": {
-              "command": "#{opt_bin}/phloem",
-              "args": ["serve"]
-            }
-          }
-        }
+      Quick setup:
+        phloem setup
+
+      Or configure a specific IDE:
+        phloem setup claude-code
+        phloem setup cursor
+        phloem setup windsurf
 
       Documentation: https://github.com/phloemhq/phloem

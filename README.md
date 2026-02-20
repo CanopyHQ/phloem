@@ -86,12 +86,35 @@ No accounts. No telemetry. No network calls. Ever. [Full privacy details →](do
 
 ---
 
-## Quick Start
+## Install
+
+**macOS (Homebrew):**
 
 ```bash
 brew install phloemhq/tap/phloem
 phloem setup
 ```
+
+**Windows / Linux — download binary:**
+
+Grab the latest release for your platform from [GitHub Releases](https://github.com/CanopyHQ/phloem/releases), extract it, and add it to your PATH. Then:
+
+```bash
+phloem setup
+```
+
+**From source (any platform):**
+
+```bash
+git clone https://github.com/CanopyHQ/phloem.git
+cd phloem
+CGO_ENABLED=1 go build -o phloem .
+./phloem setup
+```
+
+Requires: Go 1.21+, C compiler (GCC, MinGW, or Xcode CLT for sqlite-vec/CGO).
+
+---
 
 `phloem setup` auto-detects your IDEs (Claude Code, Cursor, Windsurf) and configures each one. That's the entire setup.
 
@@ -209,17 +232,6 @@ No accounts. No telemetry. No analytics. No crash reporting. Your memories are a
 [Full privacy policy →](docs/PRIVACY.md)
 
 ---
-
-## Build from Source
-
-```bash
-git clone https://github.com/CanopyHQ/phloem.git
-cd phloem
-CGO_ENABLED=1 go build -o phloem .
-./phloem setup
-```
-
-Requires: Go 1.21+, C compiler (for sqlite-vec/CGO).
 
 ## Contributing
 
