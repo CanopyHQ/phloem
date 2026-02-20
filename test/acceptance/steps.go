@@ -474,7 +474,6 @@ func (tc *TestContext) checkResultsContain(content string) error {
 	return fmt.Errorf("content %s not found in results", content)
 }
 
-
 func (tc *TestContext) mcpServerRunning() error {
 	// Server will be started when needed
 	return nil
@@ -560,7 +559,6 @@ func (tc *TestContext) systemInitialized() error {
 	// System is initialized
 	return nil
 }
-
 
 func (tc *TestContext) transcriptWithUserMessage(message string) error {
 	// Create test transcript file and store message

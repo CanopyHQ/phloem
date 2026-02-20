@@ -93,7 +93,7 @@ changelog:
 
 release:
   github:
-    owner: phloemhq
+    owner: CanopyHQ
     name: phloem
   draft: false
   prerelease: auto
@@ -106,9 +106,9 @@ brews:
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     commit_author:
       name: Phloem Bot
-      email: bot@phloemhq.io
+      email: bot@canopyhq.io
     directory: Formula
-    homepage: "https://github.com/phloemhq/phloem"
+    homepage: "https://github.com/CanopyHQ/phloem"
     description: "Local-first AI memory with causal graphs"
     license: "Apache-2.0"
     test: |
@@ -124,4 +124,4 @@ brews:
         phloem setup cursor
         phloem setup windsurf
 
-      Documentation: https://github.com/phloemhq/phloem
+      Documentation: https://github.com/CanopyHQ/phloem

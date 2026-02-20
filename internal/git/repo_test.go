@@ -9,8 +9,8 @@ import (
 
 func TestParseRemoteURL_HTTPS(t *testing.T) {
 	tests := []struct {
-		name     string
-		url      string
+		name      string
+		url       string
 		wantOwner string
 		wantRepo  string
 		wantErr   bool

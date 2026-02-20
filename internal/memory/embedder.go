@@ -693,4 +693,3 @@ func getEmbedderInner() Embedder {
 	fmt.Fprintln(os.Stderr, "🧠 Using local embeddings")
 	return NewLocalEmbedder()
 }
-

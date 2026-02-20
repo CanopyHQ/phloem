@@ -195,12 +195,12 @@ func TestHandleToolsList(t *testing.T) {
 
 	// Should include the core tools and any extended tools
 	expectedTools := map[string]bool{
-		"remember":                  false,
-		"recall":                    false,
-		"forget":                    false,
-		"list_memories":             false,
-		"memory_stats":              false,
-		"session_context":           false,
+		"remember":        false,
+		"recall":          false,
+		"forget":          false,
+		"list_memories":   false,
+		"memory_stats":    false,
+		"session_context": false,
 		"add_citation":    false,
 		"verify_citation": false,
 		"get_citations":   false,

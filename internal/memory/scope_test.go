@@ -84,7 +84,7 @@ func TestScopeIsolation(t *testing.T) {
 
 	// Store identical content in different scopes
 	content := "Implemented user authentication"
-	
+
 	mem1, err := store.RememberWithScope(ctx, content, []string{"auth"}, "security", "github.com/CanopyHQ/canopy")
 	require.NoError(t, err)
 

@@ -13,6 +13,9 @@ import (
 	"github.com/CanopyHQ/phloem/internal/memory"
 )
 
+// Version is set by the caller (cmd package) at startup.
+var Version = "dev"
+
 // Server implements the MCP protocol over stdio
 type Server struct {
 	store   *memory.Store
@@ -122,7 +125,7 @@ func (s *Server) handleInitialize(req *JSONRPCRequest) {
 		},
 		"serverInfo": map[string]interface{}{
 			"name":    "phloem",
-			"version": "0.1.0",
+			"version": Version,
 		},
 	}
 	s.sendResult(req.ID, result)
